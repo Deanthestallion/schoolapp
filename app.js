@@ -978,59 +978,56 @@ window.processOCRText = (text) => {
     
     for (let line of lines) {
         const parts = line.split(/\s+/).filter(Boolean);
-        if (parts.length > 2) {
-            const numbers = parts.map(p => parseFloat(p)).filter(n => !isNaN(n));
-            if (numbers.length >= 2) {
-                let admin = "";
-                let nameParts = [];
-                let scoreParts = [];
-                
-                parts.forEach(p => {
-                    if (!isNaN(parseFloat(p))) {
-                        scoreParts.push(parseFloat(p));
-                    } else {
-                        if (!admin && p.match(/[0-9]/)) { 
-                            admin = p;
-                        } else {
-                            nameParts.push(p);
-                        }
-                    }
-                });
-                
-                let rCA1 = scoreParts[0] || null;
-                let rCA2 = scoreParts[1] || null;
-                let rCA3 = scoreParts[2] || null;
-                let rExam = scoreParts[3] || null;
-                
-                let total = 0;
-                if(rCA1) total += rCA1;
-                if(rCA2) total += rCA2;
-                if(rCA3) total += rCA3;
-                if(rExam) total += rExam;
-                
-                let grade = '-';
-                if (total > 0) {
-                    if (total >= 70) grade = 'A';
-                    else if (total >= 60) grade = 'B';
-                    else if (total >= 50) grade = 'C';
-                    else if (total >= 45) grade = 'D';
-                    else if (total >= 40) grade = 'E';
-                    else grade = 'F';
+        
+        // Relaxed heuristics: just need at least one number and one word
+        const numbers = parts.map(p => parseFloat(p)).filter(n => !isNaN(n));
+        const words = parts.filter(p => isNaN(parseFloat(p)));
+
+        if (numbers.length >= 1 && words.length >= 1) {
+            let admin = "";
+            let nameParts = [];
+            
+            words.forEach(w => {
+                if (!admin && (w.match(/[0-9]/) || w.toLowerCase().includes('adm'))) { 
+                    admin = w;
+                } else {
+                    if (w.length > 1 || words.length === 1) nameParts.push(w);
                 }
-                
-                drafted.push({
-                    adminNumber: admin || (nameParts[0] ? nameParts.shift() : ''),
-                    fullName: nameParts.join(' '),
-                    scores: { ca1: rCA1, ca2: rCA2, ca3: rCA3, exam: rExam, total: total, grade: grade }
-                });
+            });
+            
+            let rCA1 = numbers[0] || null;
+            let rCA2 = numbers[1] || null;
+            let rCA3 = numbers.length > 3 ? numbers[2] : null; 
+            let rExam = numbers.length === 2 ? numbers[1] : (numbers.length > 3 ? numbers[3] : (numbers[2] || null));
+            
+            let total = 0;
+            if(rCA1) total += rCA1;
+            if(rCA2) total += rCA2;
+            if(rCA3) total += rCA3;
+            if(rExam) total += rExam;
+            
+            let grade = '-';
+            if (total > 0) {
+                if (total >= 70) grade = 'A';
+                else if (total >= 60) grade = 'B';
+                else if (total >= 50) grade = 'C';
+                else if (total >= 45) grade = 'D';
+                else if (total >= 40) grade = 'E';
+                else grade = 'F';
             }
+            
+            drafted.push({
+                adminNumber: admin || (nameParts[0] ? nameParts[0].toUpperCase() + '-00' : ''),
+                fullName: nameParts.join(' '),
+                scores: { ca1: rCA1, ca2: rCA2, ca3: rCA3, exam: rExam, total: total, grade: grade }
+            });
         }
     }
 
     if(drafted.length === 0) {
         drafted.push({ adminNumber: '', fullName: '', scores: { ca1: null, ca2: null, ca3: null, exam: null, total: 0, grade: '-' } });
     }
-    return drafted;
+    return { drafted, rawText: text };
 };
 
 window.simulateUpload = (subjectId, subjectName, type) => {
@@ -1057,7 +1054,18 @@ window.simulateUpload = (subjectId, subjectName, type) => {
                         const text = ret.data.text;
                         await worker.terminate();
 
-                        state.draftResults = window.processOCRText(text);
+                        const { drafted, rawText } = window.processOCRText(text);
+                        state.draftResults = drafted;
+
+                        if (state.draftResults.length === 1 && state.draftResults[0].adminNumber === '' && state.draftResults[0].scores.total === 0) {
+                            openModal('OCR Extraction Failed (Debug)', `
+                                <p style="margin-bottom: 1rem; color: #ef4444;">We couldn't structure the data automatically. Please review what the OCR engine read below. Ensure the image is clear and well-lit.</p>
+                                <strong>Raw Text Output:</strong>
+                                <textarea class="form-control" style="height: 300px; width: 100%; white-space: pre-wrap; margin-top: 0.5rem;" readonly>${rawText}</textarea>
+                            `);
+                            return;
+                        }
+                        
                         navigateTo('adminSubjectPreview');
                     } catch (err) {
                         console.error("OCR Error:", err);
@@ -1219,7 +1227,18 @@ window.openCameraModal = (subjectId) => {
             const text = ret.data.text;
             await worker.terminate();
 
-            state.draftResults = window.processOCRText(text);
+            const { drafted, rawText } = window.processOCRText(text);
+            state.draftResults = drafted;
+
+            if (state.draftResults.length === 1 && state.draftResults[0].adminNumber === '' && state.draftResults[0].scores.total === 0) {
+                openModal('OCR Extraction Failed (Debug)', `
+                    <p style="margin-bottom: 1rem; color: #ef4444;">We couldn't structure the data automatically. Please review what the OCR engine read below. Ensure the image is clear and well-lit.</p>
+                    <strong>Raw Text Output:</strong>
+                    <textarea class="form-control" style="height: 300px; width: 100%; white-space: pre-wrap; margin-top: 0.5rem;" readonly>${rawText}</textarea>
+                `);
+                return;
+            }
+            
             navigateTo('adminSubjectPreview');
         } catch (err) {
             console.error("OCR Error:", err);
