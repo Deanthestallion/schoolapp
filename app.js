@@ -1230,12 +1230,51 @@ window.openCameraModal = (subjectId) => {
     };
 };
 
-window.previewSubject = (subjectId, subjectName) => {
+window.previewSubject = async (subjectId, subjectName) => {
     state.adminData.subjectId = subjectId;
     state.adminData.subjectName = subjectName;
 
-    // Reset draft results to empty for the new preview.
-    state.draftResults = []; 
+    // Show loading
+    navigateTo('adminExtractLoading', { type: 'document' });
+
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('student_results')
+            .select('*, students(admission_number, full_name)')
+            .eq('session_id', state.adminData.sessionId)
+            .eq('term_id', state.adminData.termId)
+            .eq('class_id', state.adminData.classId)
+            .eq('section_id', state.adminData.sectionId)
+            .eq('subject_id', state.adminData.subjectId);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            state.draftResults = data.map(r => ({
+                resultId: r.id,
+                adminNumber: r.students?.admission_number || '',
+                fullName: r.students?.full_name || '',
+                scores: {
+                    ca1: r.ca1 !== null ? Number(r.ca1) : null,
+                    ca2: r.ca2 !== null ? Number(r.ca2) : null,
+                    ca3: r.ca3 !== null ? Number(r.ca3) : null,
+                    exam: r.exam !== null ? Number(r.exam) : null,
+                    total: r.total !== null ? Number(r.total) : 0,
+                    grade: r.grade || '-'
+                }
+            }));
+            
+            // Sort conceptually by Admission Number for nicer preview
+            state.draftResults.sort((a,b) => a.adminNumber.localeCompare(b.adminNumber));
+        } else {
+            state.draftResults = [];
+        }
+    } catch (err) {
+        console.error("Error fetching subject data:", err);
+        alert("Could not load existing subject data.");
+        state.draftResults = [];
+    }
+
     navigateTo('adminSubjectPreview');
 }
 
@@ -1606,13 +1645,37 @@ function bindEvents(viewName) {
                 }
             });
 
-            table.addEventListener('click', (e) => {
+            table.addEventListener('click', async (e) => {
                 const btn = e.target.closest('.delete-row');
                 if (btn) {
                     const tr = btn.closest('tr');
                     const idx = tr.dataset.idx;
-                    state.draftResults.splice(idx, 1);
-                    navigateTo('adminSubjectPreview'); // Re-render
+                    const draft = state.draftResults[idx];
+
+                    if (draft.resultId) {
+                        if (confirm(`Are you sure you want to permanently delete this record for ${draft.adminNumber}?`)) {
+                            const originalHtml = btn.innerHTML;
+                            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                            btn.disabled = true;
+
+                            try {
+                                const { error } = await window.supabaseClient.from('student_results').delete().eq('id', draft.resultId);
+                                if (error) throw error;
+                                
+                                state.draftResults.splice(idx, 1);
+                                navigateTo('adminSubjectPreview');
+                            } catch (err) {
+                                console.error("Error deleting:", err);
+                                alert("Failed to delete record from database.");
+                                btn.innerHTML = originalHtml;
+                                btn.disabled = false;
+                            }
+                        }
+                    } else {
+                        // Not in DB yet, just remove from UI
+                        state.draftResults.splice(idx, 1);
+                        navigateTo('adminSubjectPreview');
+                    }
                 }
             });
         }
