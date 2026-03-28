@@ -42,6 +42,7 @@ const state = {
 // DOM Elements
 const appContainer = document.getElementById('app-container');
 const navHomeBtn = document.getElementById('nav-home-btn');
+const navLogoutBtn = document.getElementById('nav-logout-btn');
 const navLogo = document.getElementById('nav-logo');
 const modalOverlay = document.getElementById('modal-container');
 const modalCloseBtn = document.getElementById('modal-close');
@@ -80,6 +81,12 @@ async function loadInitialData() {
 document.addEventListener('DOMContentLoaded', async () => {
     await loadInitialData();
     navHomeBtn.addEventListener('click', () => navigateTo('home'));
+    if(navLogoutBtn) {
+        navLogoutBtn.addEventListener('click', async () => {
+            if(window.supabaseClient) await window.supabaseClient.auth.signOut();
+            navigateTo('home');
+        });
+    }
     navLogo.addEventListener('click', () => navigateTo('home'));
     modalCloseBtn.addEventListener('click', closeModal);
     renderView('home');
@@ -94,8 +101,14 @@ function navigateTo(viewName, data = {}) {
         state.adminData = { sessionId: null, sessionName: null, termId: null, termName: null, classId: null, className: null, sectionId: null, sectionName: null, subjectId: null, subjectName: null };
         navHomeBtn.style.display = 'none';
         navHomeBtn.innerHTML = `<i class="fa-solid fa-house"></i> Home`;
+        if(navLogoutBtn) navLogoutBtn.style.display = 'none';
     } else {
         navHomeBtn.style.display = 'flex';
+        if (['adminSessions', 'adminTerms', 'adminClasses', 'adminSections', 'adminSubjects', 'adminSubjectPreview', 'adminClassPreview'].includes(viewName)) {
+            if(navLogoutBtn) navLogoutBtn.style.display = 'flex';
+        } else {
+            if(navLogoutBtn) navLogoutBtn.style.display = 'none';
+        }
     }
 
     renderView(viewName, data);
@@ -374,7 +387,10 @@ function getAdminSubjectsTemplate() {
             </div>
             <div class="action-buttons">
                 <button class="btn btn-secondary" onclick="simulateUpload('${sub.id}', '${sub.name}', 'image')">
-                    <i class="fa-solid fa-camera"></i> Scan Images
+                    <i class="fa-solid fa-camera"></i> Scan Camera
+                </button>
+                <button class="btn btn-secondary" onclick="simulateUpload('${sub.id}', '${sub.name}', 'image-file')">
+                    <i class="fa-solid fa-image"></i> Upload Image
                 </button>
                 <button class="btn btn-secondary" onclick="simulateUpload('${sub.id}', '${sub.name}', 'document')">
                     <i class="fa-solid fa-file-excel"></i> Upload Doc
@@ -956,12 +972,104 @@ function getStudentResultTemplate() {
 
 // --- Logic Helpers ---
 
+window.processOCRText = (text) => {
+    const drafted = [];
+    const lines = text.split('\n').filter(l => l.trim().length > 0);
+    
+    for (let line of lines) {
+        const parts = line.split(/\s+/).filter(Boolean);
+        if (parts.length > 2) {
+            const numbers = parts.map(p => parseFloat(p)).filter(n => !isNaN(n));
+            if (numbers.length >= 2) {
+                let admin = "";
+                let nameParts = [];
+                let scoreParts = [];
+                
+                parts.forEach(p => {
+                    if (!isNaN(parseFloat(p))) {
+                        scoreParts.push(parseFloat(p));
+                    } else {
+                        if (!admin && p.match(/[0-9]/)) { 
+                            admin = p;
+                        } else {
+                            nameParts.push(p);
+                        }
+                    }
+                });
+                
+                let rCA1 = scoreParts[0] || null;
+                let rCA2 = scoreParts[1] || null;
+                let rCA3 = scoreParts[2] || null;
+                let rExam = scoreParts[3] || null;
+                
+                let total = 0;
+                if(rCA1) total += rCA1;
+                if(rCA2) total += rCA2;
+                if(rCA3) total += rCA3;
+                if(rExam) total += rExam;
+                
+                let grade = '-';
+                if (total > 0) {
+                    if (total >= 70) grade = 'A';
+                    else if (total >= 60) grade = 'B';
+                    else if (total >= 50) grade = 'C';
+                    else if (total >= 45) grade = 'D';
+                    else if (total >= 40) grade = 'E';
+                    else grade = 'F';
+                }
+                
+                drafted.push({
+                    adminNumber: admin || (nameParts[0] ? nameParts.shift() : ''),
+                    fullName: nameParts.join(' '),
+                    scores: { ca1: rCA1, ca2: rCA2, ca3: rCA3, exam: rExam, total: total, grade: grade }
+                });
+            }
+        }
+    }
+
+    if(drafted.length === 0) {
+        drafted.push({ adminNumber: '', fullName: '', scores: { ca1: null, ca2: null, ca3: null, exam: null, total: 0, grade: '-' } });
+    }
+    return drafted;
+};
+
 window.simulateUpload = (subjectId, subjectName, type) => {
     state.adminData.subjectId = subjectId;
     state.adminData.subjectName = subjectName;
 
     if (type === 'image') {
         openCameraModal(subjectId);
+    } else if (type === 'image-file') {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                const file = e.target.files[0];
+                navigateTo('adminExtractLoading', { type: 'image' });
+
+                const reader = new FileReader();
+                reader.onload = async (evt) => {
+                    const imageData = evt.target.result;
+                    try {
+                        const worker = await window.Tesseract.createWorker('eng');
+                        const ret = await worker.recognize(imageData);
+                        const text = ret.data.text;
+                        await worker.terminate();
+
+                        state.draftResults = window.processOCRText(text);
+                        navigateTo('adminSubjectPreview');
+                    } catch (err) {
+                        console.error("OCR Error:", err);
+                        alert("Error parsing image. Please try again with a clearer picture.");
+                        state.draftResults = [];
+                        navigateTo('adminSubjectPreview');
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
     } else {
         // Trigger file manager
         const input = document.createElement('input');
@@ -969,17 +1077,84 @@ window.simulateUpload = (subjectId, subjectName, type) => {
         input.accept = '.csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel';
         input.onchange = (e) => {
             if (e.target.files && e.target.files.length > 0) {
+                const file = e.target.files[0];
                 // Navigate to loading
                 navigateTo('adminExtractLoading', { type });
 
-                // Simulate API delay, push empty draft rows for now
-                setTimeout(() => {
-                    state.draftResults = [
-                        { adminNumber: '', fullName: '', scores: { ca1: null, ca2: null, ca3: null, exam: null, total: 0, grade: '-' } },
-                        { adminNumber: '', fullName: '', scores: { ca1: null, ca2: null, ca3: null, exam: null, total: 0, grade: '-' } }
-                    ];
-                    navigateTo('adminSubjectPreview');
-                }, 2500);
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const data = evt.target.result;
+                        const workbook = window.XLSX.read(data, { type: 'binary' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonRaw = window.XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        
+                        const drafted = [];
+                        
+                        // Expecting header row and data rows.
+                        let headerRowIdx = -1;
+                        for(let i=0; i<jsonRaw.length; i++) {
+                            const rowStr = (jsonRaw[i] || []).join(' ').toLowerCase();
+                            if(rowStr.includes('admin') || rowStr.includes('name') || rowStr.includes('ca1') || rowStr.includes('exam')) {
+                                headerRowIdx = i;
+                                break;
+                            }
+                        }
+                        
+                        const startIdx = headerRowIdx !== -1 ? headerRowIdx + 1 : 0;
+                        
+                        for (let i = startIdx; i < jsonRaw.length; i++) {
+                            const row = jsonRaw[i];
+                            if (!row || row.length === 0) continue;
+                            
+                            // Trying to heuristically map based on expected columns: [AdminNo, FullName, CA1, CA2, CA3, Exam]
+                            const rAdmin = row[0] ? String(row[0]).trim() : '';
+                            const rName = row[1] ? String(row[1]).trim() : '';
+                            const rCA1 = parseFloat(row[2]) || null;
+                            const rCA2 = parseFloat(row[3]) || null;
+                            const rCA3 = parseFloat(row[4]) || null;
+                            const rExam = parseFloat(row[5]) || null;
+                            
+                            if (rAdmin || rName) {
+                                let total = 0;
+                                if(rCA1) total += rCA1;
+                                if(rCA2) total += rCA2;
+                                if(rCA3) total += rCA3;
+                                if(rExam) total += rExam;
+                                
+                                let grade = '-';
+                                if (total > 0) {
+                                    if (total >= 70) grade = 'A';
+                                    else if (total >= 60) grade = 'B';
+                                    else if (total >= 50) grade = 'C';
+                                    else if (total >= 45) grade = 'D';
+                                    else if (total >= 40) grade = 'E';
+                                    else grade = 'F';
+                                }
+
+                                drafted.push({
+                                    adminNumber: rAdmin,
+                                    fullName: rName,
+                                    scores: { ca1: rCA1, ca2: rCA2, ca3: rCA3, exam: rExam, total: total, grade: grade }
+                                });
+                            }
+                        }
+
+                        if(drafted.length === 0) {
+                            drafted.push({ adminNumber: '', fullName: '', scores: { ca1: null, ca2: null, ca3: null, exam: null, total: 0, grade: '-' } });
+                        }
+
+                        state.draftResults = drafted;
+                        navigateTo('adminSubjectPreview');
+                    } catch (err) {
+                        console.error("Extraction error:", err);
+                        alert("Error parsing document. Please check the format.");
+                        state.draftResults = [];
+                        navigateTo('adminSubjectPreview');
+                    }
+                };
+                reader.readAsBinaryString(file);
             }
         };
         input.click();
@@ -1022,22 +1197,36 @@ window.openCameraModal = (subjectId) => {
         captureBtn.disabled = true;
     }
 
-    captureBtn.onclick = () => {
+    captureBtn.onclick = async () => {
         // Flash animation effect
         video.style.opacity = '0.3';
         setTimeout(() => video.style.opacity = '1', 150);
 
-        // Wait shortly, terminate camera, move to OCR processing visual flow
-        setTimeout(() => {
+        try {
+            // Capture canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/jpeg');
+
             closeModal();
             navigateTo('adminExtractLoading', { type: 'image' });
-            setTimeout(() => {
-                state.draftResults = [
-                    { adminNumber: '', fullName: '', scores: { ca1: null, ca2: null, ca3: null, exam: null, total: 0, grade: '-' } }
-                ];
-                navigateTo('adminSubjectPreview');
-            }, 2500);
-        }, 500);
+
+            const worker = await window.Tesseract.createWorker('eng');
+            const ret = await worker.recognize(imageData);
+            const text = ret.data.text;
+            await worker.terminate();
+
+            state.draftResults = window.processOCRText(text);
+            navigateTo('adminSubjectPreview');
+        } catch (err) {
+            console.error("OCR Error:", err);
+            alert("Error parsing image. Please try again with a clearer picture.");
+            state.draftResults = [];
+            navigateTo('adminSubjectPreview');
+        }
     };
 };
 
@@ -1444,10 +1633,16 @@ function bindEvents(viewName) {
             btn.disabled = true;
 
             try {
-                for (const draft of state.draftResults) {
-                    if (!draft.adminNumber || draft.scores.total === '' || draft.scores.total === null) continue;
+                let errors = [];
+                for (let i = 0; i < state.draftResults.length; i++) {
+                    const draft = state.draftResults[i];
+                    
+                    if (!draft.adminNumber) {
+                        if (draft.scores.total > 0) errors.push(`Row ${i+1}: Missing Admission Number.`);
+                        continue;
+                    }
+                    if (draft.scores.total === '' || draft.scores.total === null) continue;
 
-                    // 1. Get or create student
                     let studentId = null;
                     const { data: students } = await window.supabaseClient
                         .from('students')
@@ -1457,16 +1652,23 @@ function bindEvents(viewName) {
                     if (students && students.length > 0) {
                         studentId = students[0].id;
                     } else {
-                        const { data: newStu } = await window.supabaseClient
+                        const { data: newStu, error: stuErr } = await window.supabaseClient
                             .from('students')
-                            .insert([{ admission_number: draft.adminNumber, full_name: draft.fullName }])
+                            .insert([{ admission_number: draft.adminNumber, full_name: draft.fullName || 'Unknown Student' }])
                             .select('id');
+                            
+                        if (stuErr) {
+                            errors.push(`Student ${draft.adminNumber}: ${stuErr.message}`);
+                            continue;
+                        }
                         if (newStu && newStu.length > 0) studentId = newStu[0].id;
                     }
 
-                    if (!studentId) continue;
+                    if (!studentId) {
+                         errors.push(`Student ${draft.adminNumber}: Could not retrieve ID.`);
+                         continue;
+                    }
 
-                    // 2. Check for existing result
                     const { data: existingResults } = await window.supabaseClient
                         .from('student_results')
                         .select('id')
@@ -1493,28 +1695,32 @@ function bindEvents(viewName) {
                     };
 
                     if (existingResults && existingResults.length > 0) {
-                        await window.supabaseClient.from('student_results').update(payload).eq('id', existingResults[0].id);
+                        const { error: updErr } = await window.supabaseClient.from('student_results').update(payload).eq('id', existingResults[0].id);
+                        if (updErr) errors.push(`Result ${draft.adminNumber}: ${updErr.message}`);
                     } else {
-                        await window.supabaseClient.from('student_results').insert([payload]);
+                        const { error: insErr } = await window.supabaseClient.from('student_results').insert([payload]);
+                        if (insErr) errors.push(`Result ${draft.adminNumber}: ${insErr.message}`);
                     }
                 }
 
-                // Show success and redirect
-                openModal('Success', `
-                    <div class="text-center">
-                        <i class="fa-solid fa-circle-check text-green-500" style="font-size: 3rem; color: #10b981; margin-bottom: 1rem;"></i>
-                        <p>Subject data saved to database successfully!</p>
-                    </div>
-                `);
-                
-                setTimeout(() => {
-                    closeModal();
-                    navigateTo('adminSubjects');
-                }, 1500);
+                if (errors.length > 0) {
+                    alert("Some rows failed to save:\\n" + errors.join('\\n'));
+                } else {
+                    openModal('Success', `
+                        <div class="text-center">
+                            <i class="fa-solid fa-circle-check text-green-500" style="font-size: 3rem; color: #10b981; margin-bottom: 1rem;"></i>
+                            <p>Subject data saved to database successfully!</p>
+                        </div>
+                    `);
+                    setTimeout(() => {
+                        closeModal();
+                        navigateTo('adminSubjects');
+                    }, 1500);
+                }
 
             } catch (err) {
                 console.error("Error saving subject", err);
-                alert("An error occurred while saving the data.");
+                alert("An unexpected error occurred while saving the data.");
             }
 
             btn.innerHTML = originalText;

@@ -30,9 +30,14 @@
             <img src="images/logo.jpg" alt="Logo" style="height: 48px; border-radius: 50%;">
             <span>Science Secondary School Kafin Hausa</span>
         </div>
-        <button id="nav-home-btn" class="nav-btn" style="display: none;">
-            <i class="fa-solid fa-house"></i> Home
-        </button>
+        <div style="display: flex; gap: 1rem;">
+            <button id="nav-home-btn" class="nav-btn" style="display: none;">
+                <i class="fa-solid fa-house"></i> Home
+            </button>
+            <button id="nav-logout-btn" class="nav-btn" style="display: none; background: #ef4444; color: white;">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
     </header>
 
     <main id="app-container" class="container">
@@ -54,6 +59,10 @@
 
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- OCR & Excel Extraction SDKs -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
     <!-- Base Scripts -->
     <script src="supabase.js"></script>
