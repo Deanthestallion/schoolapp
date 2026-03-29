@@ -506,6 +506,15 @@ function getAdminSubjectPreviewTemplate() {
                     </table>
                 </div>
             </div>
+
+            ${state.rawOcrText ? `
+            <div class="glass-panel" style="padding: 1.5rem; margin-top: 1.5rem;">
+                <h3 style="margin-bottom: 0.5rem; color: #ef4444;"><i class="fa-solid fa-bug"></i> OCR Raw Output Debugger</h3>
+                <p class="text-muted" style="margin-bottom: 1rem;">Here is the exact text the AI read from your image. Use this to cross-check the table above and manually add or correct any rows it missed!</p>
+                <textarea class="form-control" style="width: 100%; height: 300px; font-family: monospace; white-space: pre-wrap;" readonly>${state.rawOcrText}</textarea>
+            </div>
+            ` : ''}
+
         </div>
     `;
 }
@@ -1056,15 +1065,7 @@ window.simulateUpload = (subjectId, subjectName, type) => {
 
                         const { drafted, rawText } = window.processOCRText(text);
                         state.draftResults = drafted;
-
-                        if (state.draftResults.length === 1 && state.draftResults[0].adminNumber === '' && state.draftResults[0].scores.total === 0) {
-                            openModal('OCR Extraction Failed (Debug)', `
-                                <p style="margin-bottom: 1rem; color: #ef4444;">We couldn't structure the data automatically. Please review what the OCR engine read below. Ensure the image is clear and well-lit.</p>
-                                <strong>Raw Text Output:</strong>
-                                <textarea class="form-control" style="height: 300px; width: 100%; white-space: pre-wrap; margin-top: 0.5rem;" readonly>${rawText}</textarea>
-                            `);
-                            return;
-                        }
+                        state.rawOcrText = rawText;
                         
                         navigateTo('adminSubjectPreview');
                     } catch (err) {
@@ -1229,15 +1230,7 @@ window.openCameraModal = (subjectId) => {
 
             const { drafted, rawText } = window.processOCRText(text);
             state.draftResults = drafted;
-
-            if (state.draftResults.length === 1 && state.draftResults[0].adminNumber === '' && state.draftResults[0].scores.total === 0) {
-                openModal('OCR Extraction Failed (Debug)', `
-                    <p style="margin-bottom: 1rem; color: #ef4444;">We couldn't structure the data automatically. Please review what the OCR engine read below. Ensure the image is clear and well-lit.</p>
-                    <strong>Raw Text Output:</strong>
-                    <textarea class="form-control" style="height: 300px; width: 100%; white-space: pre-wrap; margin-top: 0.5rem;" readonly>${rawText}</textarea>
-                `);
-                return;
-            }
+            state.rawOcrText = rawText;
             
             navigateTo('adminSubjectPreview');
         } catch (err) {
@@ -1252,6 +1245,7 @@ window.openCameraModal = (subjectId) => {
 window.previewSubject = async (subjectId, subjectName) => {
     state.adminData.subjectId = subjectId;
     state.adminData.subjectName = subjectName;
+    state.rawOcrText = null;
 
     // Show loading
     navigateTo('adminExtractLoading', { type: 'document' });
