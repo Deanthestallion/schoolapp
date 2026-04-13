@@ -880,3 +880,14 @@ select.form-control option {
         width: calc(100% - 2rem);
     }
 }
+
+/* Print Result Document Formatting */
+.report-card p, 
+.report-card span {
+    text-align: justify;
+    display: inline-block;
+}
+
+.report-table span {
+    display: inline;
+}

@@ -521,7 +521,7 @@ function getAdminSubjectPreviewTemplate() {
 
 function getAdminClassPreviewTemplate() {
     const key = `${state.adminData.sessionId}_${state.adminData.termId}_${state.adminData.classId}_${state.adminData.sectionId}`;
-    const allStudents = window.AppData.resultsStore[key] || [];
+    let baseStudents = window.AppData.resultsStore[key] || [];
 
     // We get all unique subjects that have grades
     const subjectsMap = {};
@@ -531,6 +531,36 @@ function getAdminClassPreviewTemplate() {
     const subjectIds = window.AppData.subjects.map(s => s.id);
     const thHTML = window.AppData.subjects.map(s => `<th>${s.name.substring(0, 3)}</th>`).join('');
 
+    let allStudents = baseStudents.map(student => {
+        let totalScore = 0;
+        let subjectCount = 0;
+        subjectIds.forEach(subId => {
+            const gradeInfo = student.scores[subId];
+            if (gradeInfo && typeof gradeInfo.total === 'number') {
+                totalScore += gradeInfo.total;
+                subjectCount++;
+            }
+        });
+        const averageScore = subjectCount > 0 ? (totalScore / subjectCount) : 0;
+        return {
+            ...student,
+            totalScore: parseFloat(totalScore.toFixed(2)),
+            averageScore: parseFloat(averageScore.toFixed(2))
+        };
+    });
+
+    // Sort by Average Score Ascending
+    allStudents.sort((a, b) => a.averageScore - b.averageScore);
+
+    // Assign Position
+    let tempSorted = [...allStudents].sort((a, b) => b.averageScore - a.averageScore);
+    let positions = {};
+    tempSorted.forEach((s, idx) => {
+        if (!positions[s.adminNumber]) {
+            positions[s.adminNumber] = idx + 1;
+        }
+    });
+
     const rowsHtml = allStudents.map(student => {
         const tdHTML = subjectIds.map(subId => {
             const gradeInfo = student.scores[subId];
@@ -538,11 +568,16 @@ function getAdminClassPreviewTemplate() {
             return `<td class="text-muted">-</td>`;
         }).join('');
 
+        const studentPos = positions[student.adminNumber] || '-';
+
         return `
             <tr>
                 <td>${student.adminNumber}</td>
                 <td>${student.fullName}</td>
                 ${tdHTML}
+                <td><strong>${student.totalScore}</strong></td>
+                <td><strong>${student.averageScore}</strong></td>
+                <td><strong>${studentPos}</strong></td>
             </tr>
         `;
     }).join('');
@@ -573,10 +608,13 @@ function getAdminClassPreviewTemplate() {
                                 <th>Admin No</th>
                                 <th>Full Name</th>
                                 ${thHTML}
+                                <th>Total</th>
+                                <th>Average</th>
+                                <th>Position</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${rowsHtml.length > 0 ? rowsHtml : '<tr><td colspan="10" class="text-center text-muted">No subjects saved yet.</td></tr>'}
+                            ${rowsHtml.length > 0 ? rowsHtml : '<tr><td colspan="100" class="text-center text-muted">No subjects saved yet.</td></tr>'}
                         </tbody>
                     </table>
                 </div>
@@ -868,7 +906,7 @@ function getStudentResultTemplate() {
                         <div style="text-align: center; flex: 1;">
                             <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase;">SCIENCE AND TECHNICAL EDUCATION BOARD</h3>
                             <p style="margin: 2px 0; font-size: 0.9rem;">JIGAWA STATE, NIGERIA</p>
-                            <h2 style="margin: 5px 0; font-size: 1.1rem; font-weight: bold;">SCIENCE SECONDARY SCHOOL KANYA BABBA</h2>
+                            <h2 style="margin: 5px 0; font-size: 1.1rem; font-weight: bold;">SCIENCE SECONDARY SCHOOL KAFIN HAUSA</h2>
                             <h3 style="margin: 10px 0 0 0; font-size: 1.2rem; font-weight: bold; background: #ccc; display: inline-block; padding: 2px 10px;">STUDENT REPORT SHEET</h3>
                         </div>
                         <img src="images/logo.jpg" alt="Logo" style="width: 80px; object-fit: contain;">
