@@ -1291,7 +1291,7 @@ window.previewSubject = async (subjectId, subjectName) => {
     try {
         const { data, error } = await window.supabaseClient
             .from('student_results')
-            .select('*, students(admission_number, full_name)')
+            .select('*')
             .eq('session_id', state.adminData.sessionId)
             .eq('term_id', state.adminData.termId)
             .eq('class_id', state.adminData.classId)
@@ -1301,19 +1301,34 @@ window.previewSubject = async (subjectId, subjectName) => {
         if (error) throw error;
 
         if (data && data.length > 0) {
-            state.draftResults = data.map(r => ({
-                resultId: r.id,
-                adminNumber: r.students?.admission_number || '',
-                fullName: r.students?.full_name || '',
-                scores: {
-                    ca1: r.ca1 !== null ? Number(r.ca1) : null,
-                    ca2: r.ca2 !== null ? Number(r.ca2) : null,
-                    ca3: r.ca3 !== null ? Number(r.ca3) : null,
-                    exam: r.exam !== null ? Number(r.exam) : null,
-                    total: r.total !== null ? Number(r.total) : 0,
-                    grade: r.grade || '-'
+            const studentIds = [...new Set(data.map(r => r.student_id).filter(Boolean))];
+            const studentsMap = {};
+            if (studentIds.length > 0) {
+                const { data: stData } = await window.supabaseClient
+                    .from('students')
+                    .select('id, admission_number, full_name')
+                    .in('id', studentIds);
+                if (stData) {
+                    stData.forEach(s => studentsMap[s.id] = s);
                 }
-            }));
+            }
+
+            state.draftResults = data.map(r => {
+                const sData = studentsMap[r.student_id] || {};
+                return {
+                    resultId: r.id,
+                    adminNumber: sData.admission_number || '',
+                    fullName: sData.full_name || '',
+                    scores: {
+                        ca1: r.ca1 !== null ? Number(r.ca1) : null,
+                        ca2: r.ca2 !== null ? Number(r.ca2) : null,
+                        ca3: r.ca3 !== null ? Number(r.ca3) : null,
+                        exam: r.exam !== null ? Number(r.exam) : null,
+                        total: r.total !== null ? Number(r.total) : 0,
+                        grade: r.grade || '-'
+                    }
+                };
+            });
             
             // Sort conceptually by Admission Number for nicer preview
             state.draftResults.sort((a,b) => a.adminNumber.localeCompare(b.adminNumber));
@@ -1322,7 +1337,7 @@ window.previewSubject = async (subjectId, subjectName) => {
         }
     } catch (err) {
         console.error("Error fetching subject data:", err);
-        alert("Could not load existing subject data.");
+        alert("Could not load existing subject data: " + err.message);
         state.draftResults = [];
     }
 
@@ -1574,7 +1589,7 @@ function bindEvents(viewName) {
             try {
                 const { data, error } = await window.supabaseClient
                     .from('student_results')
-                    .select('*, students(admin_number, full_name)')
+                    .select('*')
                     .eq('session_id', state.adminData.sessionId)
                     .eq('term_id', state.adminData.termId)
                     .eq('class_id', state.adminData.classId)
@@ -1583,12 +1598,28 @@ function bindEvents(viewName) {
                 const key = `${state.adminData.sessionId}_${state.adminData.termId}_${state.adminData.classId}_${state.adminData.sectionId}`;
                 if (!window.AppData.resultsStore) window.AppData.resultsStore = {};
                 
-                if (data && data.length > 0) {
+                if (error) {
+                    console.error("Supabase error: ", error);
+                    window.AppData.resultsStore[key] = [];
+                } else if (data && data.length > 0) {
+                    const studentIds = [...new Set(data.map(r => r.student_id).filter(Boolean))];
+                    const studentsMap = {};
+                    if (studentIds.length > 0) {
+                        const { data: stData } = await window.supabaseClient
+                            .from('students')
+                            .select('id, admission_number, full_name')
+                            .in('id', studentIds);
+                        if (stData) {
+                            stData.forEach(s => studentsMap[s.id] = s);
+                        }
+                    }
+
                     const grouped = {};
                     data.forEach(r => {
-                        const adm = r.students?.admin_number || '';
-                        const fn = r.students?.full_name || 'Unknown Student';
-                        const sKey = adm || fn;
+                        const sData = studentsMap[r.student_id] || {};
+                        const adm = sData.admission_number || '';
+                        const fn = sData.full_name || 'Unknown Student';
+                        const sKey = adm || fn || r.student_id;
                         if (!grouped[sKey]) {
                             grouped[sKey] = {
                                 adminNumber: adm,
@@ -1662,7 +1693,7 @@ function bindEvents(viewName) {
             try {
                 const { data, error } = await window.supabaseClient
                     .from('student_results')
-                    .select('*, students(admin_number, full_name)')
+                    .select('*')
                     .eq('session_id', state.adminData.sessionId)
                     .eq('term_id', state.adminData.termId)
                     .eq('class_id', state.adminData.classId)
@@ -1671,12 +1702,28 @@ function bindEvents(viewName) {
                 const key = `${state.adminData.sessionId}_${state.adminData.termId}_${state.adminData.classId}_${state.adminData.sectionId}`;
                 if (!window.AppData.resultsStore) window.AppData.resultsStore = {};
                 
-                if (data && data.length > 0) {
+                if (error) {
+                    console.error("Supabase error: ", error);
+                    window.AppData.resultsStore[key] = [];
+                } else if (data && data.length > 0) {
+                    const studentIds = [...new Set(data.map(r => r.student_id).filter(Boolean))];
+                    const studentsMap = {};
+                    if (studentIds.length > 0) {
+                        const { data: stData } = await window.supabaseClient
+                            .from('students')
+                            .select('id, admission_number, full_name')
+                            .in('id', studentIds);
+                        if (stData) {
+                            stData.forEach(s => studentsMap[s.id] = s);
+                        }
+                    }
+
                     const grouped = {};
                     data.forEach(r => {
-                        const adm = r.students?.admin_number || '';
-                        const fn = r.students?.full_name || 'Unknown Student';
-                        const sKey = adm || fn;
+                        const sData = studentsMap[r.student_id] || {};
+                        const adm = sData.admission_number || '';
+                        const fn = sData.full_name || 'Unknown Student';
+                        const sKey = adm || fn || r.student_id;
                         if (!grouped[sKey]) {
                             grouped[sKey] = {
                                 adminNumber: adm,
