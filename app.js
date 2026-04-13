@@ -1566,8 +1566,52 @@ function bindEvents(viewName) {
             }
         });
 
-        document.getElementById('btn-preview-class').addEventListener('click', () => {
-            navigateTo('adminClassPreview');
+        document.getElementById('btn-preview-class').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-preview-class');
+            const ogHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+            btn.disabled = true;
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('student_results')
+                    .select('*, students(admin_number, full_name)')
+                    .eq('session_id', state.adminData.sessionId)
+                    .eq('term_id', state.adminData.termId)
+                    .eq('class_id', state.adminData.classId)
+                    .eq('section_id', state.adminData.sectionId);
+                
+                const key = `${state.adminData.sessionId}_${state.adminData.termId}_${state.adminData.classId}_${state.adminData.sectionId}`;
+                if (!window.AppData.resultsStore) window.AppData.resultsStore = {};
+                
+                if (data && data.length > 0) {
+                    const grouped = {};
+                    data.forEach(r => {
+                        const adm = r.students?.admin_number || '';
+                        const fn = r.students?.full_name || 'Unknown Student';
+                        const sKey = adm || fn;
+                        if (!grouped[sKey]) {
+                            grouped[sKey] = {
+                                adminNumber: adm,
+                                fullName: fn,
+                                scores: {}
+                            };
+                        }
+                        grouped[sKey].scores[r.subject_id] = {
+                            total: r.total,
+                            grade: r.grade
+                        };
+                    });
+                    window.AppData.resultsStore[key] = Object.values(grouped);
+                } else {
+                    window.AppData.resultsStore[key] = [];
+                }
+                navigateTo('adminClassPreview');
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.innerHTML = ogHtml;
+                btn.disabled = false;
+            }
         });
 
         document.getElementById('btn-add-section')?.addEventListener('click', () => {
@@ -1610,8 +1654,52 @@ function bindEvents(viewName) {
     }
 
     if (viewName === 'adminSubjects') {
-        document.getElementById('btn-preview-class-header').addEventListener('click', () => {
-            navigateTo('adminClassPreview');
+        document.getElementById('btn-preview-class-header').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-preview-class-header');
+            const ogHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+            btn.disabled = true;
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('student_results')
+                    .select('*, students(admin_number, full_name)')
+                    .eq('session_id', state.adminData.sessionId)
+                    .eq('term_id', state.adminData.termId)
+                    .eq('class_id', state.adminData.classId)
+                    .eq('section_id', state.adminData.sectionId);
+                
+                const key = `${state.adminData.sessionId}_${state.adminData.termId}_${state.adminData.classId}_${state.adminData.sectionId}`;
+                if (!window.AppData.resultsStore) window.AppData.resultsStore = {};
+                
+                if (data && data.length > 0) {
+                    const grouped = {};
+                    data.forEach(r => {
+                        const adm = r.students?.admin_number || '';
+                        const fn = r.students?.full_name || 'Unknown Student';
+                        const sKey = adm || fn;
+                        if (!grouped[sKey]) {
+                            grouped[sKey] = {
+                                adminNumber: adm,
+                                fullName: fn,
+                                scores: {}
+                            };
+                        }
+                        grouped[sKey].scores[r.subject_id] = {
+                            total: r.total,
+                            grade: r.grade
+                        };
+                    });
+                    window.AppData.resultsStore[key] = Object.values(grouped);
+                } else {
+                    window.AppData.resultsStore[key] = [];
+                }
+                navigateTo('adminClassPreview');
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.innerHTML = ogHtml;
+                btn.disabled = false;
+            }
         });
 
         document.getElementById('btn-add-subject')?.addEventListener('click', () => {
