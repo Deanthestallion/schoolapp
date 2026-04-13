@@ -1587,13 +1587,18 @@ function bindEvents(viewName) {
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
             btn.disabled = true;
             try {
-                const { data, error } = await window.supabaseClient
+                let query = window.supabaseClient
                     .from('student_results')
                     .select('*')
                     .eq('session_id', state.adminData.sessionId)
                     .eq('term_id', state.adminData.termId)
-                    .eq('class_id', state.adminData.classId)
-                    .eq('section_id', state.adminData.sectionId);
+                    .eq('class_id', state.adminData.classId);
+                    
+                if (state.adminData.sectionId) {
+                    query = query.eq('section_id', state.adminData.sectionId);
+                }
+
+                const { data, error } = await query;
                 
                 const key = `${state.adminData.sessionId}_${state.adminData.termId}_${state.adminData.classId}_${state.adminData.sectionId}`;
                 if (!window.AppData.resultsStore) window.AppData.resultsStore = {};
@@ -1691,13 +1696,18 @@ function bindEvents(viewName) {
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
             btn.disabled = true;
             try {
-                const { data, error } = await window.supabaseClient
+                let query = window.supabaseClient
                     .from('student_results')
                     .select('*')
                     .eq('session_id', state.adminData.sessionId)
                     .eq('term_id', state.adminData.termId)
-                    .eq('class_id', state.adminData.classId)
-                    .eq('section_id', state.adminData.sectionId);
+                    .eq('class_id', state.adminData.classId);
+                    
+                if (state.adminData.sectionId) {
+                    query = query.eq('section_id', state.adminData.sectionId);
+                }
+
+                const { data, error } = await query;
                 
                 const key = `${state.adminData.sessionId}_${state.adminData.termId}_${state.adminData.classId}_${state.adminData.sectionId}`;
                 if (!window.AppData.resultsStore) window.AppData.resultsStore = {};
