@@ -782,11 +782,25 @@ select.form-control option {
         max-width: 100%;
     }
 
-    .report-card {
-        box-shadow: none;
-        border: none;
-        padding: 0;
-        margin: 0;
+    .report-card,
+    .glass-panel {
+        box-shadow: none !important;
+        border: none !important;
+        background: none !important;
+        backdrop-filter: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .data-table th,
+    .data-table td {
+        border: 1px solid #000 !important;
+        color: #000 !important;
+    }
+    
+    .data-table th {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 }
 

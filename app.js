@@ -596,13 +596,16 @@ function getAdminClassPreviewTemplate() {
                 <span>Class Preview</span>
             </div>
             
-            <div class="header-action">
-                <h2>Class Master Sheet</h2>
+            <div class="header-action" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0;">Class Master Sheet</h2>
+                <button class="btn btn-secondary" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i> Print / Download PDF
+                </button>
             </div>
             
             <div class="glass-panel" style="padding: 1rem;">
                 <div class="table-responsive">
-                    <table class="data-table">
+                    <table class="data-table" id="master-sheet-table">
                         <thead>
                             <tr>
                                 <th>Admin No</th>
