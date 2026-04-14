@@ -912,43 +912,43 @@ function getStudentResultTemplate() {
                         <img src="images/logo.jpg" alt="Logo" style="width: 80px; object-fit: contain;">
                     </div>
                     
-                    <div class="student-info-section" style="margin-bottom: 10px; font-size: 0.85rem; font-family: sans-serif; font-weight: 500;">
+                    <div class="student-info-section" style="margin-bottom: 10px; font-size: 0.85rem; font-family: sans-serif;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                             <div style="flex: 1.5; display: flex;">
-                                <span style="width: 80px;">NAME:</span> 
+                                <span style="width: 80px; font-weight: bold;">NAME:</span> 
                                 <span style="font-weight: normal; text-transform: uppercase;">${data.studentName}</span>
                             </div>
                             <div style="flex: 2; display: flex;">
-                                <span style="width: 80px;">ADM NO:</span> 
+                                <span style="width: 80px; font-weight: bold;">ADM NO:</span> 
                                 <span style="font-weight: normal; text-transform: uppercase;">${data.admissionNumber}</span>
                             </div>
                             <div style="flex: 1;"></div>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                             <div style="flex: 1.5; display: flex;">
-                                <span style="width: 80px;">TERM:</span> 
+                                <span style="width: 80px; font-weight: bold;">TERM:</span> 
                                 <span style="font-weight: normal; text-transform: uppercase;">${data.termName}</span>
                             </div>
                             <div style="flex: 2; display: flex;">
-                                <span style="width: 80px;">SESSION:</span> 
-                                <span style="font-weight: bold; font-style: italic;">${data.sessionName}</span>
+                                <span style="width: 80px; font-weight: bold;">SESSION:</span> 
+                                <span style="font-weight: normal; font-style: italic;">${data.sessionName}</span>
                             </div>
                             <div style="flex: 1; display: flex;">
-                                <span style="width: 60px;">CLASS:</span> 
+                                <span style="width: 60px; font-weight: bold;">CLASS:</span> 
                                 <span style="font-weight: normal; text-transform: uppercase;">${data.className} ${data.sectionName}</span>
                             </div>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
                             <div style="flex: 1.5; display: flex;">
-                                <span style="width: 80px;">POSITION:</span> 
+                                <span style="width: 80px; font-weight: bold;">POSITION:</span> 
                                 <span></span>
                             </div>
                             <div style="flex: 2; display: flex;">
-                                <span style="width: 80px;">OUT OF:</span> 
+                                <span style="width: 80px; font-weight: bold;">OUT OF:</span> 
                                 <span></span>
                             </div>
                             <div style="flex: 1; display: flex;">
-                                <span style="width: 130px;">NEXT TERM BEGINS:</span> 
+                                <span style="font-weight: bold; white-space: nowrap; margin-right: 10px;">NEXT TERM BEGINS:</span> 
                                 <span></span>
                             </div>
                         </div>
