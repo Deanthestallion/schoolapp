@@ -881,7 +881,7 @@ function getStudentResultTemplate() {
         <tr><td style="border: 1px solid #000; padding: 4px;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td></tr>
         
         <tr>
-            <td style="border: 1px solid #000; padding: 4px; font-size: 0.8rem;">Total Score :</td>
+            <td style="border: 1px solid #000; padding: 4px; font-size: 0.8rem; text-align: left;">Total Score :</td>
             <td colspan="4" style="border: 1px solid #000; padding: 4px; text-align: center; font-size: 0.8rem;">out of: &nbsp;&nbsp;&nbsp; 900</td>
             <td colspan="11" style="border: 1px solid #000; padding: 4px; font-size: 0.8rem;">Average:</td>
         </tr>
