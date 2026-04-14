@@ -747,19 +747,19 @@ function getStudentResultTemplate() {
         // Psychomotor & Behaviour Section Mapping (Right side of the table)
         // Since the right side is static in the mockup, we will map it row by row.
         let rightSideHtml = '';
-        if(index === 0) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-weight: bold; font-size: 0.8rem; text-align: center;">PSYCHOMOTOR<br>ASSESSMENT</td>`;
-        else if(index === 1) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">1. Fluency in Spoken English</td>`;
-        else if(index === 2) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">2. Sports</td>`;
-        else if(index === 3) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">3. Drawing & Painting</td>`;
-        else if(index === 4) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Total</td>`;
-        else if(index === 5) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-weight: bold; font-size: 0.8rem; text-align: center; text-decoration: underline;">BEHAVIOUR</td>`;
-        else if(index === 6) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Neatness</td>`;
-        else if(index === 7) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Politeness</td>`;
-        else if(index === 8) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Honesty</td>`;
-        else if(index === 9) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Relationship with teachers</td>`;
-        else if(index === 10) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Relationship with students</td>`;
-        else if(index === 11) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Self control</td>`;
-        else if(index === 12) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Team work</td>`;
+        if(index === 0) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-weight: bold; font-size: 0.8rem; text-align: left;">PSYCHOMOTOR<br>ASSESSMENT</td>`;
+        else if(index === 1) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">1. Fluency in Spoken English</td>`;
+        else if(index === 2) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">2. Sports</td>`;
+        else if(index === 3) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">3. Drawing & Painting</td>`;
+        else if(index === 4) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Total</td>`;
+        else if(index === 5) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-weight: bold; font-size: 0.8rem; text-align: left; text-decoration: underline;">BEHAVIOUR</td>`;
+        else if(index === 6) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Neatness</td>`;
+        else if(index === 7) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Politeness</td>`;
+        else if(index === 8) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Honesty</td>`;
+        else if(index === 9) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Relationship with teachers</td>`;
+        else if(index === 10) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Relationship with students</td>`;
+        else if(index === 11) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Self control</td>`;
+        else if(index === 12) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Team work</td>`;
         
 
         // Checkboxes for right side
@@ -784,7 +784,7 @@ function getStudentResultTemplate() {
 
         return `
             <tr>
-                <td style="border: 1px solid #000; padding: 4px; font-weight: bold; font-size: 0.9rem; text-align: right;">${subName}</td>
+                <td style="border: 1px solid #000; padding: 4px; font-weight: bold; font-size: 0.9rem; text-align: left;">${subName}</td>
                 <td style="border: 1px solid #000; padding: 4px; text-align: center;">${caHtml}</td>
                 <td style="border: 1px solid #000; padding: 4px; text-align: center;">${examHtml}</td>
                 <td style="border: 1px solid #000; padding: 4px; text-align: center;">${totalHtml}</td>
@@ -805,7 +805,7 @@ function getStudentResultTemplate() {
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
-            <td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Sense of Responsibilities</td>
+            <td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Sense of Responsibilities</td>
             <td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td>
         </tr>
         <tr>
@@ -815,7 +815,7 @@ function getStudentResultTemplate() {
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
-            <td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Attentiveness</td>
+            <td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Attentiveness</td>
              <td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td>
         </tr>
         <tr>
@@ -825,7 +825,7 @@ function getStudentResultTemplate() {
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
-            <td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Initiatives</td>
+            <td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Initiatives</td>
              <td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td>
         </tr>
         <tr>
@@ -835,7 +835,7 @@ function getStudentResultTemplate() {
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
-            <td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Perseverance</td>
+            <td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Perseverance</td>
              <td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td>
         </tr>
         <tr>
@@ -845,7 +845,7 @@ function getStudentResultTemplate() {
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
-            <td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: right;">Co-curricular Activities</td>
+            <td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Co-curricular Activities</td>
              <td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td>
         </tr>
          <tr>
@@ -855,7 +855,7 @@ function getStudentResultTemplate() {
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
-            <td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem;">Total</td>
+            <td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Total</td>
              <td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td><td style="border: 1px solid #000;"></td>
         </tr>
          <tr>
@@ -865,8 +865,8 @@ function getStudentResultTemplate() {
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
             <td style="border: 1px solid #000; padding: 4px;"></td>
-            <td colspan="10" rowspan="6" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.75rem; vertical-align: top;">
-                <div style="text-align: center; font-weight: bold; margin-bottom: 5px;">KEY TO RATINGS</div>
+            <td colspan="10" rowspan="6" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.75rem; vertical-align: top; text-align: left;">
+                <div style="text-align: left; font-weight: bold; margin-bottom: 5px;">KEY TO RATINGS</div>
                 <div style="margin-bottom: 3px;">5. Maintains on degree of observable traits</div>
                 <div style="margin-bottom: 15px;">4. Maintains high level of observable traits</div>
                 <div style="margin-bottom: 10px;">3. Acceptable level of observable traits</div>
