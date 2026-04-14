@@ -902,7 +902,7 @@ function getStudentResultTemplate() {
                 <div style="border: 4px double #000; padding: 15px; position: relative;"> <!-- Outer decorative border -->
                     
                     <div class="report-header-section" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
-                        <img src="images/coat.png" alt="Coat of Arms" style="width: 80px; object-fit: contain;">
+                        <img src="images/coat.svg?v=1" alt="Coat of Arms" style="width: 80px; object-fit: contain;">
                         <div style="text-align: center; flex: 1;">
                             <h3 style="margin:0; font-size: 1.1rem; text-transform: uppercase;">SCIENCE AND TECHNICAL EDUCATION BOARD</h3>
                             <p style="margin: 2px 0; font-size: 0.9rem;">JIGAWA STATE, NIGERIA</p>
