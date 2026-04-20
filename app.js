@@ -234,13 +234,16 @@ function getHomeTemplate() {
 
 function getAdminSessionsTemplate() {
     const listHtml = window.AppData.sessions.map(s => `
-        <div class="list-item glass-panel" data-id="${s.id}" data-name="${s.name}">
+        <div class="list-item glass-panel" style="position: relative;" data-id="${s.id}" data-name="${s.name}">
+            <button style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.25rem; z-index: 10;" title="Delete Session" onclick="event.stopPropagation(); window.deleteEntity('sessions', '${s.id}', 'adminSessions')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
             <div class="list-icon"><i class="fa-regular fa-calendar-days"></i></div>
             <div class="list-content">
                 <h4>${s.name}</h4>
                 <span>Manage terms and results</span>
             </div>
-            <i class="fa-solid fa-chevron-right list-arrow"></i>
+            <i class="fa-solid fa-chevron-right list-arrow" style="margin-right: 1.5rem;"></i>
         </div>
     `).join('');
 
@@ -266,13 +269,16 @@ function getAdminSessionsTemplate() {
 
 function getAdminTermsTemplate() {
     const listHtml = window.AppData.terms.map(t => `
-        <div class="list-item glass-panel" data-id="${t.id}" data-name="${t.name}">
+        <div class="list-item glass-panel" style="position: relative;" data-id="${t.id}" data-name="${t.name}">
+            <button style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.25rem; z-index: 10;" title="Delete Term" onclick="event.stopPropagation(); window.deleteEntity('terms', '${t.id}', 'adminTerms')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
             <div class="list-icon"><i class="fa-solid fa-layer-group"></i></div>
             <div class="list-content">
                 <h4>${t.name}</h4>
                 <span>Manage classes for this term</span>
             </div>
-            <i class="fa-solid fa-chevron-right list-arrow"></i>
+            <i class="fa-solid fa-chevron-right list-arrow" style="margin-right: 1.5rem;"></i>
         </div>
     `).join('');
 
@@ -1124,6 +1130,10 @@ window.deleteEntity = async (table, id, viewName) => {
              window.AppData.sections = window.AppData.sections.filter(x => x.id !== id);
         } else if (table === 'subjects') {
              window.AppData.subjects = window.AppData.subjects.filter(x => x.id !== id);
+        } else if (table === 'sessions') {
+             window.AppData.sessions = window.AppData.sessions.filter(x => x.id !== id);
+        } else if (table === 'terms') {
+             window.AppData.terms = window.AppData.terms.filter(x => x.id !== id);
         }
         
         // Re-render
