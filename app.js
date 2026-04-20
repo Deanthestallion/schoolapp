@@ -81,9 +81,9 @@ async function loadInitialData() {
 document.addEventListener('DOMContentLoaded', async () => {
     await loadInitialData();
     navHomeBtn.addEventListener('click', () => navigateTo('home'));
-    if(navLogoutBtn) {
+    if (navLogoutBtn) {
         navLogoutBtn.addEventListener('click', async () => {
-            if(window.supabaseClient) await window.supabaseClient.auth.signOut();
+            if (window.supabaseClient) await window.supabaseClient.auth.signOut();
             navigateTo('home');
         });
     }
@@ -101,13 +101,13 @@ function navigateTo(viewName, data = {}) {
         state.adminData = { sessionId: null, sessionName: null, termId: null, termName: null, classId: null, className: null, sectionId: null, sectionName: null, subjectId: null, subjectName: null };
         navHomeBtn.style.display = 'none';
         navHomeBtn.innerHTML = `<i class="fa-solid fa-house"></i> Home`;
-        if(navLogoutBtn) navLogoutBtn.style.display = 'none';
+        if (navLogoutBtn) navLogoutBtn.style.display = 'none';
     } else {
         navHomeBtn.style.display = 'flex';
         if (['adminSessions', 'adminTerms', 'adminClasses', 'adminSections', 'adminSubjects', 'adminSubjectPreview', 'adminClassPreview'].includes(viewName)) {
-            if(navLogoutBtn) navLogoutBtn.style.display = 'flex';
+            if (navLogoutBtn) navLogoutBtn.style.display = 'flex';
         } else {
-            if(navLogoutBtn) navLogoutBtn.style.display = 'none';
+            if (navLogoutBtn) navLogoutBtn.style.display = 'none';
         }
     }
 
@@ -301,13 +301,16 @@ function getAdminTermsTemplate() {
 
 function getAdminClassesTemplate() {
     const listHtml = window.AppData.classesList.map(c => `
-        <div class="list-item glass-panel" data-id="${c.id}" data-name="${c.name}">
+        <div class="list-item glass-panel" style="position: relative;" data-id="${c.id}" data-name="${c.name}">
+            <button style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.25rem; z-index: 10;" title="Delete Class" onclick="event.stopPropagation(); window.deleteEntity('classes', '${c.id}', 'adminClasses')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
             <div class="list-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
             <div class="list-content">
                 <h4>${c.name}</h4>
                 <span>Manage sections and subjects</span>
             </div>
-            <i class="fa-solid fa-chevron-right list-arrow"></i>
+            <i class="fa-solid fa-chevron-right list-arrow" style="margin-right: 1.5rem;"></i>
         </div>
     `).join('');
 
@@ -336,13 +339,16 @@ function getAdminClassesTemplate() {
 
 function getAdminSectionsTemplate() {
     const listHtml = window.AppData.sections.map(s => `
-        <div class="list-item glass-panel" data-id="${s.id}" data-name="${s.name}">
+        <div class="list-item glass-panel" style="position: relative;" data-id="${s.id}" data-name="${s.name}">
+            <button style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.25rem; z-index: 10;" title="Delete Section" onclick="event.stopPropagation(); window.deleteEntity('sections', '${s.id}', 'adminSections')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
             <div class="list-icon"><i class="fa-solid fa-users-rectangle"></i></div>
             <div class="list-content">
                 <h4>Section ${s.name}</h4>
                 <span>Input and view results</span>
             </div>
-            <i class="fa-solid fa-chevron-right list-arrow"></i>
+            <i class="fa-solid fa-chevron-right list-arrow" style="margin-right: 1.5rem;"></i>
         </div>
     `).join('');
 
@@ -376,7 +382,10 @@ function getAdminSectionsTemplate() {
 
 function getAdminSubjectsTemplate() {
     const listHtml = window.AppData.subjects.map(sub => `
-        <div class="list-item glass-panel" style="flex-direction: column; align-items: stretch; gap: 1rem;" data-id="${sub.id}" data-name="${sub.name}">
+        <div class="list-item glass-panel" style="flex-direction: column; align-items: stretch; gap: 1rem; position: relative;" data-id="${sub.id}" data-name="${sub.name}">
+            <button style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.25rem; z-index: 10;" title="Delete Subject" onclick="event.stopPropagation(); window.deleteEntity('subjects', '${sub.id}', 'adminSubjects')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
             <div style="display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center;">
                     <div class="list-icon"><i class="fa-solid fa-book"></i></div>
@@ -598,9 +607,14 @@ function getAdminClassPreviewTemplate() {
             
             <div class="header-action" style="display: flex; justify-content: space-between; align-items: center;">
                 <h2 style="margin: 0;">Class Master Sheet</h2>
-                <button class="btn btn-secondary" onclick="window.print()">
-                    <i class="fa-solid fa-print"></i> Print / Download PDF
-                </button>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button class="btn btn-secondary" onclick="exportClassPreviewToExcel()">
+                        <i class="fa-solid fa-file-excel"></i> Download Excel / CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.print()">
+                        <i class="fa-solid fa-print"></i> Print / Download PDF
+                    </button>
+                </div>
             </div>
             
             <div class="glass-panel" style="padding: 1rem;">
@@ -624,6 +638,23 @@ function getAdminClassPreviewTemplate() {
             </div>
         </div>
     `;
+}
+
+function exportClassPreviewToExcel() {
+    const table = document.getElementById('master-sheet-table');
+    if (!table) return;
+
+    // Create a new workbook and add the table as a worksheet
+    const wb = XLSX.utils.table_to_book(table, { sheet: "Class Master Sheet" });
+
+    // Create a generic filename with class and section name
+    let filename = "Class_Master_Sheet.xlsx";
+    if (state.adminData && state.adminData.className && state.adminData.sectionName) {
+        filename = `${state.adminData.className}_Section_${state.adminData.sectionName}_Preview.xlsx`;
+    }
+
+    // Generate and download the Excel file
+    XLSX.writeFile(wb, filename);
 }
 
 function getStudentSearchTemplate() {
@@ -717,18 +748,18 @@ function getStudentResultTemplate() {
     const rowsHtml = allSubjects.map((subName, index) => {
         // Find if student has this subject
         const subData = data.results.find(r => r.subjectName.toLowerCase() === subName.toLowerCase() || r.subjectName.includes(subName.split(' ')[0]));
-        
+
         let caHtml = '';
         let examHtml = '';
         let totalHtml = '';
         let gradeHtml = '';
         let remarkHtml = '';
 
-        if(subData) {
+        if (subData) {
             let caTotal = (subData.ca1 || 0) + (subData.ca2 || 0) + (subData.ca3 || 0);
             let examScore = subData.exam || 0;
             let subjectTotal = subData.total !== null ? subData.total : (caTotal > 0 || examScore > 0 ? (caTotal + examScore) : 0);
-            
+
             if (subjectTotal > 0) {
                 totalScore += subjectTotal;
                 subjectCount++;
@@ -738,32 +769,32 @@ function getStudentResultTemplate() {
             examHtml = examScore > 0 ? examScore : '';
             totalHtml = subjectTotal > 0 ? subjectTotal : '';
             gradeHtml = subData.grade || '';
-            
-            if(subjectTotal >= 70) remarkHtml = 'Excellent';
-            else if(subjectTotal >= 60) remarkHtml = 'Very Good';
-            else if(subjectTotal >= 50) remarkHtml = 'Good';
-            else if(subjectTotal >= 45) remarkHtml = 'Pass';
-            else if(subjectTotal >= 40) remarkHtml = 'Fair';
-            else if(subjectTotal > 0) remarkHtml = 'Fail';
+
+            if (subjectTotal >= 70) remarkHtml = 'Excellent';
+            else if (subjectTotal >= 60) remarkHtml = 'Very Good';
+            else if (subjectTotal >= 50) remarkHtml = 'Good';
+            else if (subjectTotal >= 45) remarkHtml = 'Pass';
+            else if (subjectTotal >= 40) remarkHtml = 'Fair';
+            else if (subjectTotal > 0) remarkHtml = 'Fail';
         }
 
         // Psychomotor & Behaviour Section Mapping (Right side of the table)
         // Since the right side is static in the mockup, we will map it row by row.
         let rightSideHtml = '';
-        if(index === 0) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-weight: bold; font-size: 0.8rem; text-align: left;">PSYCHOMOTOR<br>ASSESSMENT</td>`;
-        else if(index === 1) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">1. Fluency in Spoken English</td>`;
-        else if(index === 2) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">2. Sports</td>`;
-        else if(index === 3) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">3. Drawing & Painting</td>`;
-        else if(index === 4) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Total</td>`;
-        else if(index === 5) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-weight: bold; font-size: 0.8rem; text-align: left; text-decoration: underline;">BEHAVIOUR</td>`;
-        else if(index === 6) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Neatness</td>`;
-        else if(index === 7) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Politeness</td>`;
-        else if(index === 8) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Honesty</td>`;
-        else if(index === 9) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Relationship with teachers</td>`;
-        else if(index === 10) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Relationship with students</td>`;
-        else if(index === 11) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Self control</td>`;
-        else if(index === 12) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Team work</td>`;
-        
+        if (index === 0) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-weight: bold; font-size: 0.8rem; text-align: left;">PSYCHOMOTOR<br>ASSESSMENT</td>`;
+        else if (index === 1) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">1. Fluency in Spoken English</td>`;
+        else if (index === 2) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">2. Sports</td>`;
+        else if (index === 3) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">3. Drawing & Painting</td>`;
+        else if (index === 4) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Total</td>`;
+        else if (index === 5) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-weight: bold; font-size: 0.8rem; text-align: left; text-decoration: underline;">BEHAVIOUR</td>`;
+        else if (index === 6) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Neatness</td>`;
+        else if (index === 7) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Politeness</td>`;
+        else if (index === 8) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Honesty</td>`;
+        else if (index === 9) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Relationship with teachers</td>`;
+        else if (index === 10) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Relationship with students</td>`;
+        else if (index === 11) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Self control</td>`;
+        else if (index === 12) rightSideHtml = `<td colspan="5" style="border: 1px solid #000; padding: 2px 4px; font-size: 0.8rem; text-align: left;">Team work</td>`;
+
 
         // Checkboxes for right side
         let checksHtml = `
@@ -774,9 +805,9 @@ function getStudentResultTemplate() {
             <td style="border: 1px solid #000; width: 20px;"></td>
         `;
 
-        if(index === 0 || index === 5) {
+        if (index === 0 || index === 5) {
             // Header rows for right side, no checkboxes, but keep structure
-             checksHtml = `
+            checksHtml = `
                 <td style="border: 1px solid #000; width: 20px; background: #f0f0f0;"></td>
                 <td style="border: 1px solid #000; width: 20px; background: #f0f0f0;"></td>
                 <td style="border: 1px solid #000; width: 20px; background: #f0f0f0;"></td>
@@ -1025,10 +1056,10 @@ function getStudentResultTemplate() {
 window.processOCRText = (text) => {
     const drafted = [];
     const lines = text.split('\n').filter(l => l.trim().length > 0);
-    
+
     for (let line of lines) {
         const parts = line.split(/\s+/).filter(Boolean);
-        
+
         // Relaxed heuristics: just need at least one number and one word
         const numbers = parts.map(p => parseFloat(p)).filter(n => !isNaN(n));
         const words = parts.filter(p => isNaN(parseFloat(p)));
@@ -1036,26 +1067,26 @@ window.processOCRText = (text) => {
         if (numbers.length >= 1 && words.length >= 1) {
             let admin = "";
             let nameParts = [];
-            
+
             words.forEach(w => {
-                if (!admin && (w.match(/[0-9]/) || w.toLowerCase().includes('adm'))) { 
+                if (!admin && (w.match(/[0-9]/) || w.toLowerCase().includes('adm'))) {
                     admin = w;
                 } else {
                     if (w.length > 1 || words.length === 1) nameParts.push(w);
                 }
             });
-            
+
             let rCA1 = numbers[0] || null;
             let rCA2 = numbers[1] || null;
-            let rCA3 = numbers.length > 3 ? numbers[2] : null; 
+            let rCA3 = numbers.length > 3 ? numbers[2] : null;
             let rExam = numbers.length === 2 ? numbers[1] : (numbers.length > 3 ? numbers[3] : (numbers[2] || null));
-            
+
             let total = 0;
-            if(rCA1) total += rCA1;
-            if(rCA2) total += rCA2;
-            if(rCA3) total += rCA3;
-            if(rExam) total += rExam;
-            
+            if (rCA1) total += rCA1;
+            if (rCA2) total += rCA2;
+            if (rCA3) total += rCA3;
+            if (rExam) total += rExam;
+
             let grade = '-';
             if (total > 0) {
                 if (total >= 70) grade = 'A';
@@ -1065,7 +1096,7 @@ window.processOCRText = (text) => {
                 else if (total >= 40) grade = 'E';
                 else grade = 'F';
             }
-            
+
             drafted.push({
                 adminNumber: admin || (nameParts[0] ? nameParts[0].toUpperCase() + '-00' : ''),
                 fullName: nameParts.join(' '),
@@ -1074,10 +1105,33 @@ window.processOCRText = (text) => {
         }
     }
 
-    if(drafted.length === 0) {
+    if (drafted.length === 0) {
         drafted.push({ adminNumber: '', fullName: '', scores: { ca1: null, ca2: null, ca3: null, exam: null, total: 0, grade: '-' } });
     }
     return { drafted, rawText: text };
+};
+
+window.deleteEntity = async (table, id, viewName) => {
+    if (!confirm(`Are you sure you want to delete this item? This action cannot be undone.`)) return;
+    try {
+        const { error } = await window.supabaseClient.from(table).delete().eq('id', id);
+        if (error) throw error;
+        
+        // Remove from local AppData cache
+        if (table === 'classes') {
+             window.AppData.classesList = window.AppData.classesList.filter(x => x.id !== id);
+        } else if (table === 'sections') {
+             window.AppData.sections = window.AppData.sections.filter(x => x.id !== id);
+        } else if (table === 'subjects') {
+             window.AppData.subjects = window.AppData.subjects.filter(x => x.id !== id);
+        }
+        
+        // Re-render
+        renderView(viewName);
+    } catch (err) {
+        console.error("Delete Error:", err);
+        alert(`Failed to delete item: ` + err.message);
+    }
 };
 
 window.simulateUpload = (subjectId, subjectName, type) => {
@@ -1107,7 +1161,7 @@ window.simulateUpload = (subjectId, subjectName, type) => {
                         const { drafted, rawText } = window.processOCRText(text);
                         state.draftResults = drafted;
                         state.rawOcrText = rawText;
-                        
+
                         navigateTo('adminSubjectPreview');
                     } catch (err) {
                         console.error("OCR Error:", err);
@@ -1139,25 +1193,25 @@ window.simulateUpload = (subjectId, subjectName, type) => {
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
                         const jsonRaw = window.XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                        
+
                         const drafted = [];
-                        
+
                         // Expecting header row and data rows.
                         let headerRowIdx = -1;
-                        for(let i=0; i<jsonRaw.length; i++) {
+                        for (let i = 0; i < jsonRaw.length; i++) {
                             const rowStr = (jsonRaw[i] || []).join(' ').toLowerCase();
-                            if(rowStr.includes('admin') || rowStr.includes('name') || rowStr.includes('ca1') || rowStr.includes('exam')) {
+                            if (rowStr.includes('admin') || rowStr.includes('name') || rowStr.includes('ca1') || rowStr.includes('exam')) {
                                 headerRowIdx = i;
                                 break;
                             }
                         }
-                        
+
                         const startIdx = headerRowIdx !== -1 ? headerRowIdx + 1 : 0;
-                        
+
                         for (let i = startIdx; i < jsonRaw.length; i++) {
                             const row = jsonRaw[i];
                             if (!row || row.length === 0) continue;
-                            
+
                             // Trying to heuristically map based on expected columns: [AdminNo, FullName, CA1, CA2, CA3, Exam]
                             const rAdmin = row[0] ? String(row[0]).trim() : '';
                             const rName = row[1] ? String(row[1]).trim() : '';
@@ -1165,14 +1219,14 @@ window.simulateUpload = (subjectId, subjectName, type) => {
                             const rCA2 = parseFloat(row[3]) || null;
                             const rCA3 = parseFloat(row[4]) || null;
                             const rExam = parseFloat(row[5]) || null;
-                            
+
                             if (rAdmin || rName) {
                                 let total = 0;
-                                if(rCA1) total += rCA1;
-                                if(rCA2) total += rCA2;
-                                if(rCA3) total += rCA3;
-                                if(rExam) total += rExam;
-                                
+                                if (rCA1) total += rCA1;
+                                if (rCA2) total += rCA2;
+                                if (rCA3) total += rCA3;
+                                if (rExam) total += rExam;
+
                                 let grade = '-';
                                 if (total > 0) {
                                     if (total >= 70) grade = 'A';
@@ -1191,7 +1245,7 @@ window.simulateUpload = (subjectId, subjectName, type) => {
                             }
                         }
 
-                        if(drafted.length === 0) {
+                        if (drafted.length === 0) {
                             drafted.push({ adminNumber: '', fullName: '', scores: { ca1: null, ca2: null, ca3: null, exam: null, total: 0, grade: '-' } });
                         }
 
@@ -1272,7 +1326,7 @@ window.openCameraModal = (subjectId) => {
             const { drafted, rawText } = window.processOCRText(text);
             state.draftResults = drafted;
             state.rawOcrText = rawText;
-            
+
             navigateTo('adminSubjectPreview');
         } catch (err) {
             console.error("OCR Error:", err);
@@ -1332,9 +1386,9 @@ window.previewSubject = async (subjectId, subjectName) => {
                     }
                 };
             });
-            
+
             // Sort conceptually by Admission Number for nicer preview
-            state.draftResults.sort((a,b) => a.adminNumber.localeCompare(b.adminNumber));
+            state.draftResults.sort((a, b) => a.adminNumber.localeCompare(b.adminNumber));
         } else {
             state.draftResults = [];
         }
@@ -1596,16 +1650,16 @@ function bindEvents(viewName) {
                     .eq('session_id', state.adminData.sessionId)
                     .eq('term_id', state.adminData.termId)
                     .eq('class_id', state.adminData.classId);
-                    
+
                 if (state.adminData.sectionId) {
                     query = query.eq('section_id', state.adminData.sectionId);
                 }
 
                 const { data, error } = await query;
-                
+
                 const key = `${state.adminData.sessionId}_${state.adminData.termId}_${state.adminData.classId}_${state.adminData.sectionId}`;
                 if (!window.AppData.resultsStore) window.AppData.resultsStore = {};
-                
+
                 if (error) {
                     console.error("Supabase error: ", error);
                     window.AppData.resultsStore[key] = [];
@@ -1705,16 +1759,16 @@ function bindEvents(viewName) {
                     .eq('session_id', state.adminData.sessionId)
                     .eq('term_id', state.adminData.termId)
                     .eq('class_id', state.adminData.classId);
-                    
+
                 if (state.adminData.sectionId) {
                     query = query.eq('section_id', state.adminData.sectionId);
                 }
 
                 const { data, error } = await query;
-                
+
                 const key = `${state.adminData.sessionId}_${state.adminData.termId}_${state.adminData.classId}_${state.adminData.sectionId}`;
                 if (!window.AppData.resultsStore) window.AppData.resultsStore = {};
-                
+
                 if (error) {
                     console.error("Supabase error: ", error);
                     window.AppData.resultsStore[key] = [];
@@ -1814,7 +1868,7 @@ function bindEvents(viewName) {
                         let val = parseFloat(inputs[i].value);
                         if (!isNaN(val)) total += val;
                     });
-                    
+
                     let grade = '-';
                     if (total > 0) {
                         if (total >= 70) grade = 'A';
@@ -1860,7 +1914,7 @@ function bindEvents(viewName) {
                             try {
                                 const { error } = await window.supabaseClient.from('student_results').delete().eq('id', draft.resultId);
                                 if (error) throw error;
-                                
+
                                 state.draftResults.splice(idx, 1);
                                 navigateTo('adminSubjectPreview');
                             } catch (err) {
@@ -1896,72 +1950,117 @@ function bindEvents(viewName) {
 
             try {
                 let errors = [];
-                for (let i = 0; i < state.draftResults.length; i++) {
-                    const draft = state.draftResults[i];
-                    
+                const validDrafts = [];
+                
+                state.draftResults.forEach((draft, i) => {
                     if (!draft.adminNumber) {
-                        if (draft.scores.total > 0) errors.push(`Row ${i+1}: Missing Admission Number.`);
-                        continue;
+                        if (draft.scores.total > 0) errors.push(`Row ${i + 1}: Missing Admission Number.`);
+                    } else if (draft.scores.total !== '' && draft.scores.total !== null) {
+                        validDrafts.push(draft);
                     }
-                    if (draft.scores.total === '' || draft.scores.total === null) continue;
+                });
+                
+                if (validDrafts.length > 0) {
+                    const adminNumbers = validDrafts.map(d => d.adminNumber);
 
-                    let studentId = null;
-                    const { data: students } = await window.supabaseClient
+                    // 1. Fetch existing students
+                    const { data: existingStudents, error: fetchStuErr } = await window.supabaseClient
                         .from('students')
-                        .select('id')
-                        .eq('admission_number', draft.adminNumber);
+                        .select('id, admission_number')
+                        .in('admission_number', adminNumbers);
 
-                    if (students && students.length > 0) {
-                        studentId = students[0].id;
-                    } else {
-                        const { data: newStu, error: stuErr } = await window.supabaseClient
-                            .from('students')
-                            .insert([{ admission_number: draft.adminNumber, full_name: draft.fullName || 'Unknown Student' }])
-                            .select('id');
-                            
-                        if (stuErr) {
-                            errors.push(`Student ${draft.adminNumber}: ${stuErr.message}`);
-                            continue;
+                    if (fetchStuErr) throw fetchStuErr;
+
+                    const studentMap = {};
+                    existingStudents?.forEach(s => {
+                        studentMap[s.admission_number] = s.id;
+                    });
+
+                    // 2. Identify missing students and bulk insert
+                    const missingStudents = validDrafts.filter(d => !studentMap[d.adminNumber]).map(d => ({
+                        admission_number: d.adminNumber,
+                        full_name: d.fullName || 'Unknown Student'
+                    }));
+
+                    const uniqueMissing = [];
+                    const seen = new Set();
+                    missingStudents.forEach(m => {
+                        if (!seen.has(m.admission_number)) {
+                            seen.add(m.admission_number);
+                            uniqueMissing.push(m);
                         }
-                        if (newStu && newStu.length > 0) studentId = newStu[0].id;
+                    });
+
+                    if (uniqueMissing.length > 0) {
+                        const { data: newStudents, error: insStuErr } = await window.supabaseClient
+                            .from('students')
+                            .insert(uniqueMissing)
+                            .select('id, admission_number');
+                            
+                        if (insStuErr) throw insStuErr;
+                        
+                        newStudents?.forEach(s => {
+                            studentMap[s.admission_number] = s.id;
+                        });
                     }
 
-                    if (!studentId) {
-                         errors.push(`Student ${draft.adminNumber}: Could not retrieve ID.`);
-                         continue;
-                    }
-
-                    const { data: existingResults } = await window.supabaseClient
+                    // 3. Fetch existing results for this section & subject
+                    const { data: existingResults, error: fetchResErr } = await window.supabaseClient
                         .from('student_results')
-                        .select('id')
-                        .eq('student_id', studentId)
+                        .select('id, student_id')
                         .eq('session_id', state.adminData.sessionId)
                         .eq('term_id', state.adminData.termId)
                         .eq('class_id', state.adminData.classId)
                         .eq('section_id', state.adminData.sectionId)
                         .eq('subject_id', state.adminData.subjectId);
 
-                    const payload = {
-                        student_id: studentId,
-                        session_id: state.adminData.sessionId,
-                        term_id: state.adminData.termId,
-                        class_id: state.adminData.classId,
-                        section_id: state.adminData.sectionId,
-                        subject_id: state.adminData.subjectId,
-                        ca1: draft.scores.ca1?.toString() || null,
-                        ca2: draft.scores.ca2 || null,
-                        ca3: draft.scores.ca3 || null,
-                        exam: draft.scores.exam || null,
-                        total: draft.scores.total || null,
-                        grade: draft.scores.grade || null
-                    };
+                    if (fetchResErr) throw fetchResErr;
 
-                    if (existingResults && existingResults.length > 0) {
-                        const { error: updErr } = await window.supabaseClient.from('student_results').update(payload).eq('id', existingResults[0].id);
-                        if (updErr) errors.push(`Result ${draft.adminNumber}: ${updErr.message}`);
-                    } else {
-                        const { error: insErr } = await window.supabaseClient.from('student_results').insert([payload]);
-                        if (insErr) errors.push(`Result ${draft.adminNumber}: ${insErr.message}`);
+                    const resultMap = {};
+                    existingResults?.forEach(r => {
+                        resultMap[r.student_id] = r.id;
+                    });
+
+                    // 4. Construct payload for bulk Upsert
+                    const resultsPayload = validDrafts.map(draft => {
+                        const sId = studentMap[draft.adminNumber];
+                        const payload = {
+                            student_id: sId,
+                            session_id: state.adminData.sessionId,
+                            term_id: state.adminData.termId,
+                            class_id: state.adminData.classId,
+                            section_id: state.adminData.sectionId,
+                            subject_id: state.adminData.subjectId,
+                            ca1: draft.scores.ca1?.toString() || null,
+                            ca2: draft.scores.ca2 || null,
+                            ca3: draft.scores.ca3 || null,
+                            exam: draft.scores.exam || null,
+                            total: draft.scores.total || null,
+                            grade: draft.scores.grade || null
+                        };
+                        
+                        if (resultMap[sId]) {
+                            payload.id = resultMap[sId];
+                        }
+                        return payload;
+                    }).filter(p => p.student_id);
+
+                    const finalPayloads = [];
+                    const savedSIds = new Set();
+                    resultsPayload.forEach(p => {
+                        if (!savedSIds.has(p.student_id)) {
+                            savedSIds.add(p.student_id);
+                            finalPayloads.push(p);
+                        }
+                    });
+
+                    // 5. Bulk Upsert
+                    if (finalPayloads.length > 0) {
+                        const { error: upsertErr } = await window.supabaseClient
+                            .from('student_results')
+                            .upsert(finalPayloads);
+                            
+                        if (upsertErr) throw upsertErr;
                     }
                 }
 
@@ -2109,9 +2208,9 @@ async function startSlideshow() {
             if (response.ok) {
                 const slideDiv = document.createElement('div');
                 slideDiv.className = `slide`;
-                if(loadedImages === 0) slideDiv.classList.add('active'); // Make first image active
+                if (loadedImages === 0) slideDiv.classList.add('active'); // Make first image active
                 slideDiv.style.backgroundImage = `url('${imgPath}')`;
-                
+
                 // Insert before the overlay
                 slideshowContainer.insertBefore(slideDiv, overlay);
                 loadedImages++;
@@ -2121,14 +2220,14 @@ async function startSlideshow() {
         }
     }
 
-    if(loadedImages === 0) return; // No images found
+    if (loadedImages === 0) return; // No images found
 
     let currentSlide = 0;
     const slides = document.querySelectorAll('.slide');
-    
+
     // Safety check just in case
-    if(slides.length === 0) return;
-    
+    if (slides.length === 0) return;
+
     setInterval(() => {
         slides[currentSlide].classList.remove('active');
         currentSlide = (currentSlide + 1) % slides.length;
