@@ -234,16 +234,13 @@ function getHomeTemplate() {
 
 function getAdminSessionsTemplate() {
     const listHtml = window.AppData.sessions.map(s => `
-        <div class="list-item glass-panel" style="position: relative;" data-id="${s.id}" data-name="${s.name}">
-            <button style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.25rem; z-index: 10;" title="Delete Session" onclick="event.stopPropagation(); window.deleteEntity('sessions', '${s.id}', 'adminSessions')">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+        <div class="list-item glass-panel" data-id="${s.id}" data-name="${s.name}">
             <div class="list-icon"><i class="fa-regular fa-calendar-days"></i></div>
             <div class="list-content">
                 <h4>${s.name}</h4>
                 <span>Manage terms and results</span>
             </div>
-            <i class="fa-solid fa-chevron-right list-arrow" style="margin-right: 1.5rem;"></i>
+            <i class="fa-solid fa-chevron-right list-arrow"></i>
         </div>
     `).join('');
 
@@ -269,16 +266,13 @@ function getAdminSessionsTemplate() {
 
 function getAdminTermsTemplate() {
     const listHtml = window.AppData.terms.map(t => `
-        <div class="list-item glass-panel" style="position: relative;" data-id="${t.id}" data-name="${t.name}">
-            <button style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.25rem; z-index: 10;" title="Delete Term" onclick="event.stopPropagation(); window.deleteEntity('terms', '${t.id}', 'adminTerms')">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+        <div class="list-item glass-panel" data-id="${t.id}" data-name="${t.name}">
             <div class="list-icon"><i class="fa-solid fa-layer-group"></i></div>
             <div class="list-content">
                 <h4>${t.name}</h4>
                 <span>Manage classes for this term</span>
             </div>
-            <i class="fa-solid fa-chevron-right list-arrow" style="margin-right: 1.5rem;"></i>
+            <i class="fa-solid fa-chevron-right list-arrow"></i>
         </div>
     `).join('');
 
@@ -307,16 +301,13 @@ function getAdminTermsTemplate() {
 
 function getAdminClassesTemplate() {
     const listHtml = window.AppData.classesList.map(c => `
-        <div class="list-item glass-panel" style="position: relative;" data-id="${c.id}" data-name="${c.name}">
-            <button style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.25rem; z-index: 10;" title="Delete Class" onclick="event.stopPropagation(); window.deleteEntity('classes', '${c.id}', 'adminClasses')">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+        <div class="list-item glass-panel" data-id="${c.id}" data-name="${c.name}">
             <div class="list-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
             <div class="list-content">
                 <h4>${c.name}</h4>
                 <span>Manage sections and subjects</span>
             </div>
-            <i class="fa-solid fa-chevron-right list-arrow" style="margin-right: 1.5rem;"></i>
+            <i class="fa-solid fa-chevron-right list-arrow"></i>
         </div>
     `).join('');
 
@@ -345,16 +336,13 @@ function getAdminClassesTemplate() {
 
 function getAdminSectionsTemplate() {
     const listHtml = window.AppData.sections.map(s => `
-        <div class="list-item glass-panel" style="position: relative;" data-id="${s.id}" data-name="${s.name}">
-            <button style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.25rem; z-index: 10;" title="Delete Section" onclick="event.stopPropagation(); window.deleteEntity('sections', '${s.id}', 'adminSections')">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+        <div class="list-item glass-panel" data-id="${s.id}" data-name="${s.name}">
             <div class="list-icon"><i class="fa-solid fa-users-rectangle"></i></div>
             <div class="list-content">
                 <h4>Section ${s.name}</h4>
                 <span>Input and view results</span>
             </div>
-            <i class="fa-solid fa-chevron-right list-arrow" style="margin-right: 1.5rem;"></i>
+            <i class="fa-solid fa-chevron-right list-arrow"></i>
         </div>
     `).join('');
 
@@ -388,10 +376,7 @@ function getAdminSectionsTemplate() {
 
 function getAdminSubjectsTemplate() {
     const listHtml = window.AppData.subjects.map(sub => `
-        <div class="list-item glass-panel" style="flex-direction: column; align-items: stretch; gap: 1rem; position: relative;" data-id="${sub.id}" data-name="${sub.name}">
-            <button style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.25rem; z-index: 10;" title="Delete Subject" onclick="event.stopPropagation(); window.deleteEntity('subjects', '${sub.id}', 'adminSubjects')">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+        <div class="list-item glass-panel" style="flex-direction: column; align-items: stretch; gap: 1rem;" data-id="${sub.id}" data-name="${sub.name}">
             <div style="display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center;">
                     <div class="list-icon"><i class="fa-solid fa-book"></i></div>
@@ -1115,33 +1100,6 @@ window.processOCRText = (text) => {
         drafted.push({ adminNumber: '', fullName: '', scores: { ca1: null, ca2: null, ca3: null, exam: null, total: 0, grade: '-' } });
     }
     return { drafted, rawText: text };
-};
-
-window.deleteEntity = async (table, id, viewName) => {
-    if (!confirm(`Are you sure you want to delete this item? This action cannot be undone.`)) return;
-    try {
-        const { error } = await window.supabaseClient.from(table).delete().eq('id', id);
-        if (error) throw error;
-        
-        // Remove from local AppData cache
-        if (table === 'classes') {
-             window.AppData.classesList = window.AppData.classesList.filter(x => x.id !== id);
-        } else if (table === 'sections') {
-             window.AppData.sections = window.AppData.sections.filter(x => x.id !== id);
-        } else if (table === 'subjects') {
-             window.AppData.subjects = window.AppData.subjects.filter(x => x.id !== id);
-        } else if (table === 'sessions') {
-             window.AppData.sessions = window.AppData.sessions.filter(x => x.id !== id);
-        } else if (table === 'terms') {
-             window.AppData.terms = window.AppData.terms.filter(x => x.id !== id);
-        }
-        
-        // Re-render
-        renderView(viewName);
-    } catch (err) {
-        console.error("Delete Error:", err);
-        alert(`Failed to delete item: ` + err.message);
-    }
 };
 
 window.simulateUpload = (subjectId, subjectName, type) => {
