@@ -284,11 +284,10 @@ function getAdminTermsTemplate() {
             <div class="header-action">
                 <div>
                     <h2>Select Term</h2>
-                    <p class="text-muted">Select a term or create a new one.</p>
+                    <p class="text-muted">Select a term.</p>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
                     <button class="btn btn-secondary" onclick="loadInitialData().then(() => renderView('adminTerms'))"><i class="fa-solid fa-sync"></i> Refresh</button>
-                    <button class="btn btn-primary" id="btn-add-term"><i class="fa-solid fa-plus"></i> Add New Term</button>
                 </div>
             </div>
             
@@ -322,9 +321,8 @@ function getAdminClassesTemplate() {
             <div class="header-action">
                 <div>
                     <h2>Select Class</h2>
-                    <p class="text-muted">Select a class or create a new one.</p>
+                    <p class="text-muted">Select a class.</p>
                 </div>
-                <button class="btn btn-primary" id="btn-add-class"><i class="fa-solid fa-plus"></i> Add New Class</button>
             </div>
             
             <div class="list-container" id="class-list">
@@ -362,7 +360,6 @@ function getAdminSectionsTemplate() {
                     <p class="text-muted">Choose a section to enter records or view all.</p>
                 </div>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <button class="btn btn-primary" id="btn-add-section"><i class="fa-solid fa-plus"></i> Add Section</button>
                     <button class="btn btn-secondary" id="btn-preview-class"><i class="fa-solid fa-eye"></i> Class Preview</button>
                 </div>
             </div>
@@ -420,7 +417,6 @@ function getAdminSubjectsTemplate() {
                     <p class="text-muted">Upload result sheets (images/CSV) or edit pre-existing data.</p>
                 </div>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <button class="btn btn-primary" id="btn-add-subject"><i class="fa-solid fa-plus"></i> Add Subject</button>
                     <button class="btn btn-secondary" id="btn-preview-class-header"><i class="fa-solid fa-users"></i> Section Overview</button>
                 </div>
             </div>
@@ -1504,45 +1500,7 @@ function bindEvents(viewName) {
             }
         });
 
-        document.getElementById('btn-add-term')?.addEventListener('click', () => {
-            openModal('Add New Term', `
-                <div class="form-group">
-                    <label>Term Name (e.g. First Term)</label>
-                    <input type="text" id="new-term-name" class="form-control" placeholder="Enter term name">
-                </div>
-                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button class="btn btn-primary" id="save-new-term">Create Term</button>
-                </div>
-            `);
 
-            setTimeout(() => {
-                document.getElementById('save-new-term').addEventListener('click', async () => {
-                    const name = document.getElementById('new-term-name').value.trim();
-                    const btn = document.getElementById('save-new-term');
-
-                    if (name) {
-                        btn.disabled = true;
-                        btn.innerHTML = 'Creating...';
-                        try {
-                            const { data, error } = await window.supabaseClient.from('terms').insert([{ name }]).select();
-                            if (error) throw error;
-                            const newObj = data[0];
-                            window.AppData.terms.push(newObj);
-                            closeModal();
-                            state.adminData.termId = newObj.id;
-                            state.adminData.termName = newObj.name;
-                            navigateTo('adminClasses');
-                        } catch (err) {
-                            console.error(err);
-                            alert("Failed to create term.");
-                            btn.disabled = false;
-                            btn.innerHTML = 'Create Term';
-                        }
-                    }
-                });
-            }, 100);
-        });
     }
 
     if (viewName === 'adminClasses') {
@@ -1555,45 +1513,7 @@ function bindEvents(viewName) {
             }
         });
 
-        document.getElementById('btn-add-class')?.addEventListener('click', () => {
-            openModal('Add New Class', `
-                <div class="form-group">
-                    <label>Class Name (e.g. SS 3)</label>
-                    <input type="text" id="new-class-name" class="form-control" placeholder="Enter class name">
-                </div>
-                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button class="btn btn-primary" id="save-new-class">Create Class</button>
-                </div>
-            `);
 
-            setTimeout(() => {
-                document.getElementById('save-new-class').addEventListener('click', async () => {
-                    const name = document.getElementById('new-class-name').value.trim();
-                    const btn = document.getElementById('save-new-class');
-
-                    if (name) {
-                        btn.disabled = true;
-                        btn.innerHTML = 'Creating...';
-                        try {
-                            const { data, error } = await window.supabaseClient.from('classes').insert([{ name }]).select();
-                            if (error) throw error;
-                            const newObj = data[0];
-                            window.AppData.classesList.push(newObj);
-                            closeModal();
-                            state.adminData.classId = newObj.id;
-                            state.adminData.className = newObj.name;
-                            navigateTo('adminSections');
-                        } catch (err) {
-                            console.error(err);
-                            alert("Failed to create class.");
-                            btn.disabled = false;
-                            btn.innerHTML = 'Create Class';
-                        }
-                    }
-                });
-            }, 100);
-        });
     }
 
     if (viewName === 'adminSections') {
@@ -1675,43 +1595,7 @@ function bindEvents(viewName) {
             }
         });
 
-        document.getElementById('btn-add-section')?.addEventListener('click', () => {
-            openModal('Add New Section', `
-                <div class="form-group">
-                    <label>Section Name (e.g. A, B, Science)</label>
-                    <input type="text" id="new-section-name" class="form-control" placeholder="Enter section name">
-                </div>
-                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button class="btn btn-primary" id="save-new-section">Create Section</button>
-                </div>
-            `);
 
-            setTimeout(() => {
-                document.getElementById('save-new-section').addEventListener('click', async () => {
-                    const name = document.getElementById('new-section-name').value.trim();
-                    const btn = document.getElementById('save-new-section');
-
-                    if (name) {
-                        btn.disabled = true;
-                        btn.innerHTML = 'Creating...';
-                        try {
-                            const { data, error } = await window.supabaseClient.from('sections').insert([{ name }]).select();
-                            if (error) throw error;
-                            const newObj = data[0];
-                            window.AppData.sections.push(newObj);
-                            closeModal();
-                            navigateTo('adminSections'); // re-render to see the new section
-                        } catch (err) {
-                            console.error(err);
-                            alert("Failed to create section.");
-                            btn.disabled = false;
-                            btn.innerHTML = 'Create Section';
-                        }
-                    }
-                });
-            }, 100);
-        });
     }
 
     if (viewName === 'adminSubjects') {
@@ -1784,43 +1668,7 @@ function bindEvents(viewName) {
             }
         });
 
-        document.getElementById('btn-add-subject')?.addEventListener('click', () => {
-            openModal('Add New Subject', `
-                <div class="form-group">
-                    <label>Subject Name (e.g. Geography)</label>
-                    <input type="text" id="new-subject-name" class="form-control" placeholder="Enter subject name">
-                </div>
-                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button class="btn btn-primary" id="save-new-subject">Create Subject</button>
-                </div>
-            `);
 
-            setTimeout(() => {
-                document.getElementById('save-new-subject').addEventListener('click', async () => {
-                    const name = document.getElementById('new-subject-name').value.trim();
-                    const btn = document.getElementById('save-new-subject');
-
-                    if (name) {
-                        btn.disabled = true;
-                        btn.innerHTML = 'Creating...';
-                        try {
-                            const { data, error } = await window.supabaseClient.from('subjects').insert([{ name }]).select();
-                            if (error) throw error;
-                            const newObj = data[0];
-                            window.AppData.subjects.push(newObj);
-                            closeModal();
-                            navigateTo('adminSubjects'); // re-render to see the new subject
-                        } catch (err) {
-                            console.error(err);
-                            alert("Failed to create subject.");
-                            btn.disabled = false;
-                            btn.innerHTML = 'Create Subject';
-                        }
-                    }
-                });
-            }, 100);
-        });
     }
 
     if (viewName === 'adminSubjectPreview') {
