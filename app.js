@@ -47,6 +47,43 @@ const navLogo = document.getElementById('nav-logo');
 const modalOverlay = document.getElementById('modal-container');
 const modalCloseBtn = document.getElementById('modal-close');
 
+
+// --- Global UI Helpers ---
+window.showToast = function(message, type = 'success', duration = 4000) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-' + type;
+    let icon = 'fa-info-circle';
+    if (type === 'success') icon = 'fa-check-circle';
+    if (type === 'error') icon = 'fa-exclamation-circle';
+    if (type === 'warning') icon = 'fa-exclamation-triangle';
+    
+    toast.innerHTML = '<i class="fa-solid ' + icon + '" style="margin-top: 3px;"></i><div class="toast-body">' + message + '</div><button class="toast-close"><i class="fa-solid fa-xmark"></i></button>';
+    container.appendChild(toast);
+    
+    const closeBtn = toast.querySelector('.toast-close');
+    const removeToast = () => {
+        toast.style.animation = 'fadeOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    };
+    closeBtn.onclick = removeToast;
+    setTimeout(removeToast, duration);
+}
+
+window.parseGrade = function(val) {
+    if (val === "" || val === null || val === undefined) return null;
+    let num = parseFloat(val);
+    if (isNaN(num)) return null;
+    if (num < 0) return 0;
+    return num;
+}
+// --- End Helpers ---
+
 async function loadInitialData() {
     try {
         const fetchTable = async (tableName) => {
@@ -94,7 +131,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // Navigation Logic
-function navigateTo(viewName, data = {}) {
+async function navigateTo(viewName, data = {}) {
+    if (viewName.startsWith('admin')) {
+        const sessionRes = await window.supabaseClient.auth.getSession();
+        if (!sessionRes.data.session) {
+            window.showToast('Unauthorized access. Please login.', 'error');
+            viewName = 'home';
+        }
+    }
     state.currentView = viewName;
 
     if (viewName === 'home') {
@@ -1129,7 +1173,7 @@ window.simulateUpload = (subjectId, subjectName, type) => {
                         navigateTo('adminSubjectPreview');
                     } catch (err) {
                         console.error("OCR Error:", err);
-                        alert("Error parsing image. Please try again with a clearer picture.");
+                        window.showToast('Error parsing image. Please try again with a clearer picture.', 'error');
                         state.draftResults = [];
                         navigateTo('adminSubjectPreview');
                     }
@@ -1179,10 +1223,10 @@ window.simulateUpload = (subjectId, subjectName, type) => {
                             // Trying to heuristically map based on expected columns: [AdminNo, FullName, CA1, CA2, CA3, Exam]
                             const rAdmin = row[0] ? String(row[0]).trim() : '';
                             const rName = row[1] ? String(row[1]).trim() : '';
-                            const rCA1 = parseFloat(row[2]) || null;
-                            const rCA2 = parseFloat(row[3]) || null;
-                            const rCA3 = parseFloat(row[4]) || null;
-                            const rExam = parseFloat(row[5]) || null;
+                            const rCA1 = window.parseGrade(row[2]);
+                            const rCA2 = window.parseGrade(row[3]);
+                            const rCA3 = window.parseGrade(row[4]);
+                            const rExam = window.parseGrade(row[5]);
 
                             if (rAdmin || rName) {
                                 let total = 0;
@@ -1217,7 +1261,7 @@ window.simulateUpload = (subjectId, subjectName, type) => {
                         navigateTo('adminSubjectPreview');
                     } catch (err) {
                         console.error("Extraction error:", err);
-                        alert("Error parsing document. Please check the format.");
+                        window.showToast('Error parsing document. Please check the format.', 'error');
                         state.draftResults = [];
                         navigateTo('adminSubjectPreview');
                     }
@@ -1294,7 +1338,7 @@ window.openCameraModal = (subjectId) => {
             navigateTo('adminSubjectPreview');
         } catch (err) {
             console.error("OCR Error:", err);
-            alert("Error parsing image. Please try again with a clearer picture.");
+            window.showToast('Error parsing image. Please try again with a clearer picture.', 'error');
             state.draftResults = [];
             navigateTo('adminSubjectPreview');
         }
@@ -1358,7 +1402,7 @@ window.previewSubject = async (subjectId, subjectName) => {
         }
     } catch (err) {
         console.error("Error fetching subject data:", err);
-        alert("Could not load existing subject data: " + err.message);
+        window.showToast('Could not load existing subject data: ' + err.message, 'error');
         state.draftResults = [];
     }
 
@@ -1480,7 +1524,7 @@ function bindEvents(viewName) {
                             navigateTo('adminTerms');
                         } catch (err) {
                             console.error(err);
-                            alert("Failed to create session.");
+                            window.showToast('Failed to create session.', 'error');
                             btn.disabled = false;
                             btn.innerHTML = 'Create Session';
                         }
@@ -1703,10 +1747,10 @@ function bindEvents(viewName) {
                         state.draftResults[idx].adminNumber = inputs[0].value;
                         state.draftResults[idx].fullName = inputs[1].value;
                         state.draftResults[idx].scores = {
-                            ca1: parseFloat(inputs[2].value) || null,
-                            ca2: parseFloat(inputs[3].value) || null,
-                            ca3: parseFloat(inputs[4].value) || null,
-                            exam: parseFloat(inputs[5].value) || null,
+                            ca1: window.parseGrade(inputs[2].value),
+                            ca2: window.parseGrade(inputs[3].value),
+                            ca3: window.parseGrade(inputs[4].value),
+                            exam: window.parseGrade(inputs[5].value),
                             total,
                             grade
                         };
@@ -1735,7 +1779,7 @@ function bindEvents(viewName) {
                                 navigateTo('adminSubjectPreview');
                             } catch (err) {
                                 console.error("Error deleting:", err);
-                                alert("Failed to delete record from database.");
+                                window.showToast('Failed to delete record from database.', 'error');
                                 btn.innerHTML = originalHtml;
                                 btn.disabled = false;
                             }
@@ -1881,7 +1925,7 @@ function bindEvents(viewName) {
                 }
 
                 if (errors.length > 0) {
-                    alert("Some rows failed to save:\\n" + errors.join('\\n'));
+                    window.showToast('Some rows failed to save. See console for details.', 'warning');
                 } else {
                     openModal('Success', `
                         <div class="text-center">
@@ -1897,7 +1941,7 @@ function bindEvents(viewName) {
 
             } catch (err) {
                 console.error("Error saving subject", err);
-                alert("An unexpected error occurred while saving the data.");
+                window.showToast('An unexpected error occurred while saving the data.', 'error');
             }
 
             btn.innerHTML = originalText;
